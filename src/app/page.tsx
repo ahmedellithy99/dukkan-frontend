@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -10,7 +10,7 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X } from 'lucide-react';
+import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockData, generateWhatsAppLink, formatPrice } from '@/lib/api';
 import type { Category } from '@/types/marketplace';
 
@@ -35,6 +35,8 @@ export default function MarketplacePage() {
     setIsLoading,
     setError,
   } = useMarketplaceStore();
+
+  const categoriesScrollRef = useRef<HTMLDivElement>(null);
 
   // Load data on mount
   useEffect(() => {
@@ -82,9 +84,13 @@ export default function MarketplacePage() {
   }, [selectedShop, setProducts]);
 
   const categories: { id: Category; name: string; icon: string }[] = [
-    { id: 'men', name: 'Men', icon: '👔' },
-    { id: 'women', name: 'Women', icon: '👗' },
-    { id: 'kids', name: 'Kids', icon: '🧒' },
+    { id: 'clothes', name: 'Clothes', icon: '👕' },
+    { id: 'shoes', name: 'Shoes', icon: '👟' },
+    { id: 'accessories', name: 'Accessories', icon: '⌚' },
+    { id: 'cosmetics', name: 'Cosmetics', icon: '💄' },
+    { id: 'toys', name: 'Toys', icon: '🧸' },
+    { id: 'phones', name: 'Phones', icon: '📱' },
+    { id: 'laptops', name: 'Laptops', icon: '💻' },
   ];
 
   // Loading skeleton component
@@ -124,23 +130,55 @@ export default function MarketplacePage() {
 
       {/* Categories Section */}
       <section className="container mx-auto px-4">
-        <h2 className="mb-6 text-2xl font-bold">Shop by Category</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {categories.map((category) => (
-            <Card
-              key={category.id}
-              className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md"
-              onClick={() => {
-                setSelectedCategory(category.id);
-                setCurrentView('shops');
-              }}
-            >
-              <CardContent className="flex flex-col items-center justify-center gap-3 py-8">
-                <span className="text-5xl">{category.icon}</span>
-                <h3 className="text-xl font-semibold">{category.name}</h3>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Shop by Category</h2>
+        </div>
+        <div className="relative">
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+            onClick={() => {
+              if (categoriesScrollRef.current) {
+                categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+              }
+            }}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div
+            ref={categoriesScrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {categories.map((category) => (
+              <Card
+                key={category.id}
+                className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setCurrentView('shops');
+                }}
+              >
+                <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                  <span className="text-4xl">{category.icon}</span>
+                  <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+            onClick={() => {
+              if (categoriesScrollRef.current) {
+                categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+              }
+            }}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </section>
 

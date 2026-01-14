@@ -1,5 +1,5 @@
 // Category types
-export type Category = 'men' | 'women' | 'kids';
+export type Category = 'clothes' | 'shoes' | 'accessories' | 'cosmetics' | 'toys' | 'phones' | 'laptops';
 
 export interface CategoryOption {
   id: Category;
