@@ -318,6 +318,7 @@ export default function MarketplacePage() {
             <img
               src={selectedShop.bannerImage}
               alt={selectedShop.name}
+              loading="lazy"
               className="h-full w-full object-cover"
             />
           ) : (

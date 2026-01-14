@@ -39,6 +39,7 @@ export function ProductCard({ product, shopName, shopWhatsApp }: ProductCardProp
             <img
               src={product.imageUrl}
               alt={product.name}
+              loading="lazy"
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
@@ -110,6 +111,7 @@ export function ProductCard({ product, shopName, shopWhatsApp }: ProductCardProp
                 <img
                   src={product.imageUrl}
                   alt={product.name}
+                  loading="lazy"
                   className="h-full w-full object-cover"
                 />
               ) : (

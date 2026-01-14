@@ -36,6 +36,7 @@ export function ShopCard({ shop }: ShopCardProps) {
           <img
             src={shop.logo}
             alt={shop.name}
+            loading="lazy"
             className="h-full w-full object-cover"
           />
         ) : (

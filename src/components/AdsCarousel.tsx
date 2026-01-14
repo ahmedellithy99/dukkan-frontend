@@ -111,12 +111,15 @@ export function AdsCarousel() {
             <button
               onClick={() => handleBannerClick(ad)}
               className={`w-full h-full bg-gradient-to-br ${ad.backgroundColor} hover:scale-[1.02] transition-transform duration-300`}
-              style={{
-                background: ad.imageUrl
-                  ? `url(${ad.imageUrl}) center/cover no-repeat`
-                  : undefined,
-              }}
             >
+              {ad.imageUrl ? (
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  loading={index === currentIndex ? 'eager' : 'lazy'}
+                  className="w-full h-full object-cover"
+                />
+              ) : null}
               <div className="container mx-auto px-4 h-full flex items-center">
                 <div className="max-w-2xl text-white">
                   <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
