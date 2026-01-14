@@ -9,13 +9,14 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Store, MessageCircle, MapPin, Star, Package } from 'lucide-react';
+import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X } from 'lucide-react';
 import { mockData, generateWhatsAppLink, formatPrice } from '@/lib/api';
 import type { Category } from '@/types/marketplace';
 
 export default function MarketplacePage() {
   const {
     currentView,
+    searchQuery,
     selectedCategory,
     selectedShop,
     shops,
@@ -24,6 +25,7 @@ export default function MarketplacePage() {
     isLoading,
     error,
     setCurrentView,
+    setSearchQuery,
     setSelectedCategory,
     setSelectedShop,
     setShops,
@@ -58,10 +60,15 @@ export default function MarketplacePage() {
     loadData();
   }, [setShops, setFeaturedShops, setProducts, setIsLoading, setError]);
 
-  // Filter shops by category
-  const filteredShops = selectedCategory
-    ? shops.filter(shop => shop.category === selectedCategory)
-    : shops;
+  // Filter shops by category and search query
+  const filteredShops = shops.filter(shop => {
+    const matchesCategory = !selectedCategory || shop.category === selectedCategory;
+    const matchesSearch = !searchQuery ||
+      shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      shop.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      shop.address.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Load products for selected shop
   useEffect(() => {
@@ -190,10 +197,25 @@ export default function MarketplacePage() {
     <div className="container mx-auto space-y-8 px-4 py-8">
       {/* Header */}
       <div>
-        <h1 className="mb-2 text-3xl font-bold">All Shops</h1>
+        <h1 className="mb-2 text-3xl font-bold">
+          {searchQuery ? `Search Results for "${searchQuery}"` : 'All Shops'}
+        </h1>
         <p className="text-muted-foreground">
-          Discover amazing clothing stores in Abu Hommos
+          {searchQuery
+            ? `Found ${filteredShops.length} shop${filteredShops.length !== 1 ? 's' : ''} matching your search`
+            : 'Discover amazing clothing stores in Abu Hommos'
+          }
         </p>
+        {searchQuery && (
+          <Button
+            variant="ghost"
+            className="mt-2 gap-2"
+            onClick={() => setSearchQuery('')}
+          >
+            <X className="h-4 w-4" />
+            Clear search
+          </Button>
+        )}
       </div>
 
       {/* Category Filter */}

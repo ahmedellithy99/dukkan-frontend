@@ -6,6 +6,10 @@ interface MarketplaceState {
   currentView: ViewType;
   setCurrentView: (view: ViewType) => void;
 
+  // Search query
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+
   // Selected category filter
   selectedCategory: Category | null;
   setSelectedCategory: (category: Category | null) => void;
@@ -38,6 +42,7 @@ interface MarketplaceState {
 
 const initialState = {
   currentView: 'home' as ViewType,
+  searchQuery: '',
   selectedCategory: null,
   selectedShop: null,
   shops: [],
@@ -51,6 +56,8 @@ export const useMarketplaceStore = create<MarketplaceState>((set) => ({
   ...initialState,
 
   setCurrentView: (view) => set({ currentView: view }),
+
+  setSearchQuery: (query) => set({ searchQuery: query }),
 
   setSelectedCategory: (category) => set({ selectedCategory: category }),
 
