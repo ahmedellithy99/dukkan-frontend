@@ -133,7 +133,9 @@ export default function MarketplacePage() {
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold">Shop by Category</h2>
         </div>
-        <div className="relative">
+        
+        {/* Mobile: Slider with navigation buttons */}
+        <div className="md:hidden relative">
           <Button
             variant="outline"
             size="icon"
@@ -180,6 +182,75 @@ export default function MarketplacePage() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Desktop/Tablet: Grid layout when ≤ 8 elements, otherwise slider */}
+        {categories.length <= 8 ? (
+          <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
+            {categories.map((category) => (
+              <Card
+                key={category.id}
+                className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md"
+                onClick={() => {
+                  setSelectedCategory(category.id);
+                  setCurrentView('shops');
+                }}
+              >
+                <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                  <span className="text-4xl">{category.icon}</span>
+                  <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="hidden md:relative">
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+              onClick={() => {
+                if (categoriesScrollRef.current) {
+                  categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div
+              ref={categoriesScrollRef}
+              className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {categories.map((category) => (
+                <Card
+                  key={category.id}
+                  className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setCurrentView('shops');
+                  }}
+                >
+                  <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                    <span className="text-4xl">{category.icon}</span>
+                    <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+              onClick={() => {
+                if (categoriesScrollRef.current) {
+                  categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                }
+              }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </section>
 
       {/* Featured Shops Section */}
