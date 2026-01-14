@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
+import { AdsCarousel } from '@/components/AdsCarousel';
 import { ShopCard } from '@/components/ShopCard';
 import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -416,7 +417,12 @@ export default function MarketplacePage() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        {currentView === 'home' && renderHome()}
+        {currentView === 'home' && (
+          <>
+            <AdsCarousel />
+            {renderHome()}
+          </>
+        )}
         {currentView === 'shops' && renderShops()}
         {currentView === 'shop-profile' && renderShopProfile()}
       </main>
