@@ -10,15 +10,17 @@ import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { mockData, generateWhatsAppLink, formatPrice } from '@/lib/api';
-import type { Category } from '@/types/marketplace';
+import type { Category, CategoryWithSubCategories, SubCategoryOption } from '@/types/marketplace';
 
 export default function MarketplacePage() {
   const {
     currentView,
     searchQuery,
     selectedCategory,
+    selectedSubCategory,
+    selectedSubSubCategory,
     selectedShop,
     shops,
     featuredShops,
@@ -28,6 +30,8 @@ export default function MarketplacePage() {
     setCurrentView,
     setSearchQuery,
     setSelectedCategory,
+    setSelectedSubCategory,
+    setSelectedSubSubCategory,
     setSelectedShop,
     setShops,
     setFeaturedShops,
@@ -73,6 +77,17 @@ export default function MarketplacePage() {
     return matchesCategory && matchesSearch;
   });
 
+  // Helper function to get category display name
+  const getCategoryDisplayName = () => {
+    if (selectedSubSubCategory) {
+      return selectedSubSubCategory;
+    }
+    if (selectedSubCategory) {
+      return selectedSubCategoryData?.name || selectedSubCategory;
+    }
+    return selectedCategoryData?.name || '';
+  };
+
   // Load products for selected shop
   useEffect(() => {
     if (selectedShop) {
@@ -83,15 +98,218 @@ export default function MarketplacePage() {
     }
   }, [selectedShop, setProducts]);
 
-  const categories: { id: Category; name: string; icon: string }[] = [
-    { id: 'clothes', name: 'Clothes', icon: '👕' },
-    { id: 'shoes', name: 'Shoes', icon: '👟' },
-    { id: 'accessories', name: 'Accessories', icon: '⌚' },
-    { id: 'cosmetics', name: 'Cosmetics', icon: '💄' },
-    { id: 'toys', name: 'Toys', icon: '🧸' },
-    { id: 'phones', name: 'Phones', icon: '📱' },
-    { id: 'laptops', name: 'Laptops', icon: '💻' },
+  const categories: CategoryWithSubCategories[] = [
+    {
+      id: 'clothes',
+      name: 'Clothes',
+      icon: '👕',
+      subCategories: [
+        {
+          id: 'men',
+          name: 'Men',
+          icon: '👨',
+          subSubCategories: [
+            { id: 'sport', name: 'Sport' },
+            { id: 'casual', name: 'Casual' },
+            { id: 'classic', name: 'Classic' },
+            { id: 'formal', name: 'Formal' },
+          ],
+        },
+        {
+          id: 'women',
+          name: 'Women',
+          icon: '👩',
+          subSubCategories: [
+            { id: 'sport', name: 'Sport' },
+            { id: 'casual', name: 'Casual' },
+            { id: 'classic', name: 'Classic' },
+            { id: 'formal', name: 'Formal' },
+          ],
+        },
+        {
+          id: 'kids',
+          name: 'Kids',
+          icon: '👶',
+          subSubCategories: [
+            { id: 'boys', name: 'Boys' },
+            { id: 'girls', name: 'Girls' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'shoes',
+      name: 'Shoes',
+      icon: '👟',
+      subCategories: [
+        {
+          id: 'men',
+          name: 'Men',
+          icon: '👨',
+          subSubCategories: [
+            { id: 'sport', name: 'Sport' },
+            { id: 'casual', name: 'Casual' },
+            { id: 'formal', name: 'Formal' },
+          ],
+        },
+        {
+          id: 'women',
+          name: 'Women',
+          icon: '👩',
+          subSubCategories: [
+            { id: 'sport', name: 'Sport' },
+            { id: 'casual', name: 'Casual' },
+            { id: 'formal', name: 'Formal' },
+          ],
+        },
+        {
+          id: 'kids',
+          name: 'Kids',
+          icon: '👶',
+          subSubCategories: [
+            { id: 'boys', name: 'Boys' },
+            { id: 'girls', name: 'Girls' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'accessories',
+      name: 'Accessories',
+      icon: '⌚',
+      subCategories: [
+        {
+          id: 'men',
+          name: 'Men',
+          icon: '👨',
+          subSubCategories: [
+            { id: 'watches', name: 'Watches' },
+            { id: 'belts', name: 'Belts' },
+            { id: 'glasses', name: 'Glasses' },
+          ],
+        },
+        {
+          id: 'women',
+          name: 'Women',
+          icon: '👩',
+          subSubCategories: [
+            { id: 'watches', name: 'Watches' },
+            { id: 'jewelry', name: 'Jewelry' },
+            { id: 'bags', name: 'Bags' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'cosmetics',
+      name: 'Cosmetics',
+      icon: '💄',
+      subCategories: [
+        {
+          id: 'makeup',
+          name: 'Makeup',
+          icon: '💄',
+          subSubCategories: [
+            { id: 'face', name: 'Face' },
+            { id: 'eyes', name: 'Eyes' },
+            { id: 'lips', name: 'Lips' },
+          ],
+        },
+        {
+          id: 'skincare',
+          name: 'Skincare',
+          icon: '🧴',
+          subSubCategories: [
+            { id: 'face', name: 'Face' },
+            { id: 'body', name: 'Body' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'toys',
+      name: 'Toys',
+      icon: '🧸',
+      subCategories: [
+        {
+          id: 'educational',
+          name: 'Educational',
+          icon: '📚',
+          subSubCategories: [
+            { id: 'puzzles', name: 'Puzzles' },
+            { id: 'games', name: 'Games' },
+          ],
+        },
+        {
+          id: 'action',
+          name: 'Action Figures',
+          icon: '🦸',
+          subSubCategories: [
+            { id: 'superheroes', name: 'Superheroes' },
+            { id: 'collectibles', name: 'Collectibles' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'phones',
+      name: 'Phones',
+      icon: '📱',
+      subCategories: [
+        {
+          id: 'smartphones',
+          name: 'Smartphones',
+          icon: '📱',
+          subSubCategories: [
+            { id: 'apple', name: 'Apple' },
+            { id: 'samsung', name: 'Samsung' },
+            { id: 'xiaomi', name: 'Xiaomi' },
+          ],
+        },
+        {
+          id: 'accessories',
+          name: 'Accessories',
+          icon: '🔌',
+          subSubCategories: [
+            { id: 'cases', name: 'Cases' },
+            { id: 'chargers', name: 'Chargers' },
+            { id: 'headphones', name: 'Headphones' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'laptops',
+      name: 'Laptops',
+      icon: '💻',
+      subCategories: [
+        {
+          id: 'gaming',
+          name: 'Gaming',
+          icon: '🎮',
+          subSubCategories: [
+            { id: 'asus', name: 'Asus' },
+            { id: 'msi', name: 'MSI' },
+            { id: 'razer', name: 'Razer' },
+          ],
+        },
+        {
+          id: 'business',
+          name: 'Business',
+          icon: '💼',
+          subSubCategories: [
+            { id: 'dell', name: 'Dell' },
+            { id: 'hp', name: 'HP' },
+            { id: 'lenovo', name: 'Lenovo' },
+          ],
+        },
+      ],
+    },
   ];
+
+  // Get selected category data
+  const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
+  const selectedSubCategoryData = selectedCategoryData?.subCategories.find(sub => sub.id === selectedSubCategory);
 
   // Loading skeleton component
   const ShopSkeleton = () => (
@@ -131,125 +349,308 @@ export default function MarketplacePage() {
       {/* Categories Section */}
       <section className="container mx-auto px-4">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Shop by Category</h2>
-        </div>
-        
-        {/* Mobile: Slider with navigation buttons */}
-        <div className="md:hidden relative">
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-            onClick={() => {
-              if (categoriesScrollRef.current) {
-                categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-              }
-            }}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div
-            ref={categoriesScrollRef}
-            className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {categories.map((category) => (
-              <Card
-                key={category.id}
-                className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
-                onClick={() => {
-                  setSelectedCategory(category.id);
-                  setCurrentView('shops');
-                }}
-              >
-                <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                  <span className="text-4xl">{category.icon}</span>
-                  <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-            onClick={() => {
-              if (categoriesScrollRef.current) {
-                categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-              }
-            }}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Desktop/Tablet: Grid layout when ≤ 8 elements, otherwise slider */}
-        {categories.length <= 8 ? (
-          <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
-            {categories.map((category) => (
-              <Card
-                key={category.id}
-                className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md"
-                onClick={() => {
-                  setSelectedCategory(category.id);
-                  setCurrentView('shops');
-                }}
-              >
-                <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                  <span className="text-4xl">{category.icon}</span>
-                  <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="hidden md:relative">
+          <h2 className="text-2xl font-bold">
+            {selectedSubSubCategory
+              ? `${selectedCategoryData?.name} / ${selectedSubCategoryData?.name} / ${selectedSubSubCategory}`
+              : selectedSubCategory
+                ? `${selectedCategoryData?.name} / ${selectedSubCategoryData?.name}`
+                : selectedCategory
+                  ? selectedCategoryData?.name
+                  : 'Shop by Category'
+            }
+          </h2>
+          {(selectedCategory || selectedSubCategory) && (
             <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+              variant="ghost"
+              size="sm"
               onClick={() => {
-                if (categoriesScrollRef.current) {
-                  categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                if (selectedSubCategory) {
+                  setSelectedSubCategory(null);
+                } else {
+                  setSelectedCategory(null);
                 }
               }}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 mr-2" />
+              Back
             </Button>
-            <div
-              ref={categoriesScrollRef}
-              className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {categories.map((category) => (
-                <Card
-                  key={category.id}
-                  className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
+          )}
+        </div>
+        
+        {/* Show main categories when nothing selected */}
+        {!selectedCategory && (
+          <>
+            {/* Mobile: Slider with navigation buttons */}
+            <div className="md:hidden relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div
+                ref={categoriesScrollRef}
+                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {categories.map((category) => (
+                  <Card
+                    key={category.id}
+                    className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                      <span className="text-4xl">{category.icon}</span>
+                      <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop/Tablet: Grid layout when ≤ 8 elements, otherwise slider */}
+            {categories.length <= 8 ? (
+              <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
+                {categories.map((category) => (
+                  <Card
+                    key={category.id}
+                    className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md"
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                      <span className="text-4xl">{category.icon}</span>
+                      <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="hidden md:relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
                   onClick={() => {
-                    setSelectedCategory(category.id);
-                    setCurrentView('shops');
+                    if (categoriesScrollRef.current) {
+                      categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div
+                  ref={categoriesScrollRef}
+                  className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {categories.map((category) => (
+                    <Card
+                      key={category.id}
+                      className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
+                      onClick={() => {
+                        setSelectedCategory(category.id);
+                      }}
+                    >
+                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                        <span className="text-4xl">{category.icon}</span>
+                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                  onClick={() => {
+                    if (categoriesScrollRef.current) {
+                      categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Show subcategories when category is selected */}
+        {selectedCategoryData && !selectedSubCategory && (
+          <>
+            {/* Mobile: Slider for subcategories */}
+            <div className="md:hidden relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div
+                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {selectedCategoryData.subCategories.map((subCategory) => (
+                  <Card
+                    key={subCategory.id}
+                    className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40 ${
+                      selectedSubCategory === subCategory.id
+                        ? 'border-primary bg-primary/5 shadow-lg scale-105'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedSubCategory(subCategory.id);
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                      <span className="text-4xl">{subCategory.icon}</span>
+                      <h3 className="text-lg font-semibold text-center">{subCategory.name}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop/Tablet: Grid for subcategories */}
+            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+              {selectedCategoryData.subCategories.map((subCategory) => (
+                <Card
+                  key={subCategory.id}
+                  className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md ${
+                    selectedSubCategory === subCategory.id
+                      ? 'border-primary bg-primary/5 shadow-lg scale-105'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedSubCategory(subCategory.id);
                   }}
                 >
                   <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                    <span className="text-4xl">{category.icon}</span>
-                    <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                    <span className="text-4xl">{subCategory.icon}</span>
+                    <h3 className="text-lg font-semibold text-center">{subCategory.name}</h3>
                   </CardContent>
                 </Card>
               ))}
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-              onClick={() => {
-                if (categoriesScrollRef.current) {
-                  categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                }
-              }}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          </>
+        )}
+
+        {/* Show sub-subcategories when subcategory is selected */}
+        {selectedSubCategoryData && selectedSubCategoryData.subSubCategories && selectedSubCategoryData.subSubCategories.length > 0 && (
+          <>
+            {/* Mobile: Slider for sub-subcategories */}
+            <div className="md:hidden relative">
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div
+                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
+                  <Card
+                    key={subSubCategory.id}
+                    className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40 ${
+                      selectedSubSubCategory === subSubCategory.id
+                        ? 'border-primary bg-primary/5 shadow-lg scale-105'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedSubSubCategory(subSubCategory.id);
+                      setCurrentView('shops');
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                      <h3 className="text-lg font-semibold text-center">{subSubCategory.name}</h3>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                onClick={() => {
+                  if (categoriesScrollRef.current) {
+                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                  }
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Desktop/Tablet: Grid for sub-subcategories */}
+            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+              {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
+                <Card
+                  key={subSubCategory.id}
+                  className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md ${
+                    selectedSubSubCategory === subSubCategory.id
+                      ? 'border-primary bg-primary/5 shadow-lg scale-105'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedSubSubCategory(subSubCategory.id);
+                    setCurrentView('shops');
+                  }}
+                >
+                  <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                    <h3 className="text-lg font-semibold text-center">{subSubCategory.name}</h3>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </section>
 
@@ -308,12 +709,12 @@ export default function MarketplacePage() {
       {/* Header */}
       <div>
         <h1 className="mb-2 text-3xl font-bold">
-          {searchQuery ? `Search Results for "${searchQuery}"` : 'All Shops'}
+          {searchQuery ? `Search Results for "${searchQuery}"` : getCategoryDisplayName() || 'All Shops'}
         </h1>
         <p className="text-muted-foreground">
           {searchQuery
             ? `Found ${filteredShops.length} shop${filteredShops.length !== 1 ? 's' : ''} matching your search`
-            : 'Discover amazing clothing stores in Abu Hommos'
+            : `Discover amazing ${getCategoryDisplayName().toLowerCase()} stores in Abu Hommos`
           }
         </p>
         {searchQuery && (
@@ -324,6 +725,16 @@ export default function MarketplacePage() {
           >
             <X className="h-4 w-4" />
             Clear search
+          </Button>
+        )}
+        {(selectedCategory || selectedSubCategory || selectedSubSubCategory) && (
+          <Button
+            variant="ghost"
+            className="mt-2 gap-2"
+            onClick={() => setSelectedCategory(null)}
+          >
+            <X className="h-4 w-4" />
+            Clear filters
           </Button>
         )}
       </div>
@@ -348,6 +759,38 @@ export default function MarketplacePage() {
           </Button>
         ))}
       </div>
+
+      {/* Subcategory Filter */}
+      {selectedCategoryData && (
+        <div className="flex flex-wrap gap-2">
+          {selectedCategoryData.subCategories.map((subCategory) => (
+            <Button
+              key={subCategory.id}
+              variant={selectedSubCategory === subCategory.id ? 'default' : 'outline'}
+              onClick={() => setSelectedSubCategory(subCategory.id)}
+              className="gap-2"
+            >
+              <span>{subCategory.icon}</span>
+              {subCategory.name}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Sub-subcategory Filter */}
+      {selectedSubCategoryData && selectedSubCategoryData.subSubCategories && selectedSubCategoryData.subSubCategories.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
+            <Button
+              key={subSubCategory.id}
+              variant={selectedSubSubCategory === subSubCategory.id ? 'default' : 'outline'}
+              onClick={() => setSelectedSubSubCategory(subSubCategory.id)}
+            >
+              {subSubCategory.name}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Shops Grid */}
       {isLoading ? (

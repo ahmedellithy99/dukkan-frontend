@@ -14,6 +14,14 @@ interface MarketplaceState {
   selectedCategory: Category | null;
   setSelectedCategory: (category: Category | null) => void;
 
+  // Selected subcategory
+  selectedSubCategory: string | null;
+  setSelectedSubCategory: (subCategory: string | null) => void;
+
+  // Selected sub-subcategory
+  selectedSubSubCategory: string | null;
+  setSelectedSubSubCategory: (subSubCategory: string | null) => void;
+
   // Selected shop for profile view
   selectedShop: Shop | null;
   setSelectedShop: (shop: Shop | null) => void;
@@ -44,6 +52,8 @@ const initialState = {
   currentView: 'home' as ViewType,
   searchQuery: '',
   selectedCategory: null,
+  selectedSubCategory: null,
+  selectedSubSubCategory: null,
   selectedShop: null,
   shops: [],
   featuredShops: [],
@@ -59,7 +69,11 @@ export const useMarketplaceStore = create<MarketplaceState>((set) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  setSelectedCategory: (category) => set({ selectedCategory: category }),
+  setSelectedCategory: (category) => set({ selectedCategory: category, selectedSubCategory: null, selectedSubSubCategory: null }),
+
+  setSelectedSubCategory: (subCategory) => set({ selectedSubCategory: subCategory, selectedSubSubCategory: null }),
+
+  setSelectedSubSubCategory: (subSubCategory) => set({ selectedSubSubCategory: subSubCategory }),
 
   setSelectedShop: (shop) => set({ selectedShop: shop }),
 

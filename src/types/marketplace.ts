@@ -7,6 +7,32 @@ export interface CategoryOption {
   icon: string;
 }
 
+export interface SubSubCategory {
+  id: string;
+  name: string;
+}
+
+export interface SubCategory {
+  id: string;
+  name: string;
+  icon?: string;
+  subSubCategories?: SubSubCategory[];
+}
+
+export interface CategoryWithSubCategories {
+  id: Category;
+  name: string;
+  icon: string;
+  subCategories: SubCategory[];
+}
+
+export interface SubCategoryOption {
+  id: string;
+  name: string;
+  categoryId: Category;
+  subSubCategories?: SubSubCategory[];
+}
+
 // Shop types
 export interface Shop {
   id: string | number;
