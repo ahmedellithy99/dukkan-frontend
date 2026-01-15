@@ -654,34 +654,6 @@ export default function MarketplacePage() {
         )}
       </section>
 
-      {/* Featured Shops Section */}
-      <section className="container mx-auto px-4">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Featured Shops</h2>
-          <Button
-            variant="ghost"
-            className="gap-2"
-            onClick={() => setCurrentView('shops')}
-          >
-            View All
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-        {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <ShopSkeleton />
-            <ShopSkeleton />
-            <ShopSkeleton />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredShops.map((shop) => (
-              <ShopCard key={shop.id} shop={shop} />
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* CTA Section */}
       <section className="bg-primary px-4 py-16 text-center text-primary-foreground">
         <div className="container mx-auto">
