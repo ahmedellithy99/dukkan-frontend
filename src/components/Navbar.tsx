@@ -29,7 +29,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="container mx-auto px-3 py-3 sm:px-4 sm:py-4">
+      <nav className="container mx-auto px-3 py-3 sm:px-4 sm:py-2">
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -58,7 +58,7 @@ export function Navbar() {
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
-                className="pl-11 pr-11 h-10 sm:h-auto text-base sm:text-sm"
+                className="pl-11 pr-11 h-10 sm:h-11 text-base sm:text-sm"
               />
               {searchQuery && (
                 <button
