@@ -19,14 +19,13 @@ export default function ShopProfilePage() {
   const shopId = params.id as string;
 
   const {
-    shops,
     products,
     setProducts,
     setIsLoading,
     setError,
   } = useMarketplaceStore();
 
-  const [selectedShop, setSelectedShop] = useState<typeof shops[0] | null>(null);
+  const [selectedShop, setSelectedShop] = useState<any>(null);
   const [isLoading, setIsLoadingState] = useState(true);
   const [error, setErrorState] = useState<string | null>(null);
 
@@ -37,7 +36,7 @@ export default function ShopProfilePage() {
       setError(null);
 
       try {
-        // Find shop
+        // Find shop from mock data
         const shop = mockData.shops.find(s => String(s.id) === shopId);
         
         if (!shop) {
@@ -47,7 +46,7 @@ export default function ShopProfilePage() {
 
         setSelectedShop(shop);
 
-        // Load products for this shop
+        // Load products for this shop from mock data
         const shopProducts = mockData.products.filter(
           product => String(product.shopId) === shopId
         );

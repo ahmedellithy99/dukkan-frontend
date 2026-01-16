@@ -38,17 +38,18 @@ export default function ShopsPage() {
   // Load data on mount
   useEffect(() => {
     const loadData = async () => {
-      setIsLoading(true);
+      setIsLoadingState(true);
       setError(null);
 
       try {
+        // Simulate API call with mock data
         await new Promise(resolve => setTimeout(resolve, 500));
         setShops(mockData.shops);
       } catch (err) {
         setErrorState('Failed to load data. Please try again.');
         console.error('Error loading data:', err);
       } finally {
-        setIsLoading(false);
+        setIsLoadingState(false);
       }
     };
 
@@ -57,7 +58,7 @@ export default function ShopsPage() {
 
   // Sync URL params with store state
   useEffect(() => {
-    setSelectedCategory(category || null);
+    setSelectedCategory(category as any || null);
     setSelectedSubCategory(subcategory || null);
     setSelectedSubSubCategory(subsubcategory || null);
   }, [category, subcategory, subsubcategory, setSelectedCategory, setSelectedSubCategory, setSelectedSubSubCategory]);
