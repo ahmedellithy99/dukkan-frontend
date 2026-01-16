@@ -5,20 +5,13 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin } from 'lucide-react';
-import { useMarketplaceStore } from '@/store/marketplace';
+import Link from 'next/link';
 
 interface ShopCardProps {
   shop: Shop;
 }
 
 export function ShopCard({ shop }: ShopCardProps) {
-  const { setSelectedShop, setCurrentView } = useMarketplaceStore();
-
-  const handleViewShop = () => {
-    setSelectedShop(shop);
-    setCurrentView('shop-profile');
-  };
-
   const getCategoryColor = (category: string) => {
     const colors = {
       men: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
@@ -80,12 +73,11 @@ export function ShopCard({ shop }: ShopCardProps) {
       </CardContent>
 
       <CardFooter>
-        <Button
-          className="w-full"
-          onClick={handleViewShop}
-        >
-          View Shop
-        </Button>
+        <Link href={`/shops/${shop.id}`} className="w-full">
+          <Button className="w-full">
+            View Shop
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

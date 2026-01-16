@@ -1,30 +1,38 @@
 'use client';
 
 import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingBag, Home, Store, Search, X } from 'lucide-react';
+import { Home, Store, Search, X } from 'lucide-react';
+import Link from 'next/link';
 
 export function Navbar() {
-  const { currentView, setCurrentView, searchQuery, setSearchQuery } = useMarketplaceStore();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { searchQuery, setSearchQuery } = useMarketplaceStore();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const navItems = [
-    { id: 'home' as const, label: 'Home', icon: Home },
-    { id: 'shops' as const, label: 'Shops', icon: Store },
+    { id: 'home' as const, label: 'Home', icon: Home, href: '/' },
+    { id: 'shops' as const, label: 'Shops', icon: Store, href: '/shops' },
   ];
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      // Switch to shops view when searching
-      setCurrentView('shops');
+      // Navigate to shops page with search query
+      router.push(`/shops?search=${encodeURIComponent(query)}`);
     }
   };
 
   const clearSearch = () => {
     setSearchQuery('');
+    // Clear search from URL if on shops page
+    if (pathname === '/shops') {
+      router.push('/shops');
+    }
   };
 
   return (
@@ -33,18 +41,19 @@ export function Navbar() {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 h-9 sm:h-auto"
-              onClick={() => setCurrentView('home')}
-            >
-              <img
-                src="/dukkan-logo.svg"
-                alt="Dukkan"
-                className="h-6 sm:h-8 w-auto"
-              />
-              <span className="text-lg sm:text-2xl font-bold font-arabic">دكان</span>
-            </Button>
+            <Link href="/" className="flex items-center gap-1 sm:gap-2">
+              <Button
+                variant="ghost"
+                className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 h-9 sm:h-auto"
+              >
+                <img
+                  src="/dukkan-logo.svg"
+                  alt="Dukkan"
+                  className="h-6 sm:h-8 w-auto"
+                />
+                <span className="text-lg sm:text-2xl font-bold font-arabic">دكان</span>
+              </Button>
+            </Link>
           </div>
 
           {/* Search Bar */}
@@ -75,18 +84,18 @@ export function Navbar() {
           <div className="flex items-center gap-1 flex-shrink-0">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = currentView === item.id;
+              const isActive = pathname === item.href;
 
               return (
-                <Button
-                  key={item.id}
-                  variant={isActive ? 'secondary' : 'ghost'}
-                  className="flex items-center gap-2 px-2 h-9 sm:h-auto"
-                  onClick={() => setCurrentView(item.id)}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{item.label}</span>
-                </Button>
+                <Link key={item.id} href={item.href}>
+                  <Button
+                    variant={isActive ? 'secondary' : 'ghost'}
+                    className="flex items-center gap-2 px-2 h-9 sm:h-auto"
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="hidden sm:inline">{item.label}</span>
+                  </Button>
+                </Link>
               );
             })}
           </div>

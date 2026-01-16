@@ -5,34 +5,16 @@ import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AdsCarousel } from '@/components/AdsCarousel';
-import { ShopCard } from '@/components/ShopCard';
-import { ProductCard } from '@/components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowRight, Store, MessageCircle, MapPin, Star, Package, X, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { mockData, generateWhatsAppLink, formatPrice } from '@/lib/api';
-import type { Category, CategoryWithSubCategories, SubCategoryOption } from '@/types/marketplace';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { mockData } from '@/lib/api';
+import type { CategoryWithSubCategories } from '@/types/marketplace';
+import Link from 'next/link';
 
 export default function MarketplacePage() {
   const {
-    currentView,
-    searchQuery,
-    selectedCategory,
-    selectedSubCategory,
-    selectedSubSubCategory,
-    selectedShop,
     shops,
-    featuredShops,
-    products,
-    isLoading,
-    error,
-    setCurrentView,
-    setSearchQuery,
-    setSelectedCategory,
-    setSelectedSubCategory,
-    setSelectedSubSubCategory,
-    setSelectedShop,
     setShops,
     setFeaturedShops,
     setProducts,
@@ -66,37 +48,6 @@ export default function MarketplacePage() {
 
     loadData();
   }, [setShops, setFeaturedShops, setProducts, setIsLoading, setError]);
-
-  // Filter shops by category and search query
-  const filteredShops = shops.filter(shop => {
-    const matchesCategory = !selectedCategory || shop.category === selectedCategory;
-    const matchesSearch = !searchQuery ||
-      shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shop.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      shop.address.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  // Helper function to get category display name
-  const getCategoryDisplayName = () => {
-    if (selectedSubSubCategory) {
-      return selectedSubSubCategory;
-    }
-    if (selectedSubCategory) {
-      return selectedSubCategoryData?.name || selectedSubCategory;
-    }
-    return selectedCategoryData?.name || '';
-  };
-
-  // Load products for selected shop
-  useEffect(() => {
-    if (selectedShop) {
-      const shopProducts = mockData.products.filter(
-        product => product.shopId === selectedShop.id
-      );
-      setProducts(shopProducts);
-    }
-  }, [selectedShop, setProducts]);
 
   const categories: CategoryWithSubCategories[] = [
     {
@@ -307,79 +258,37 @@ export default function MarketplacePage() {
     },
   ];
 
-  // Get selected category data
-  const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
-  const selectedSubCategoryData = selectedCategoryData?.subCategories.find(sub => sub.id === selectedSubCategory);
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <AdsCarousel />
+        <div className="space-y-12">
+          {/* Hero Section */}
+          <section className="bg-gradient-to-br from-muted to-muted/50 py-16 text-center">
+            <div className="container mx-auto px-4">
+              <h1 className="mb-4 text-4xl font-bold sm:text-5xl">
+                Discover Local Clothing Shops in Abu Hommos
+              </h1>
+              <p className="mb-8 text-lg text-muted-foreground sm:text-xl">
+                Support local brands and find the best fashion near you
+              </p>
+              <Link href="/shops">
+                <Button
+                  size="lg"
+                  className="gap-2"
+                >
+                  Browse Shops
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </section>
 
-  // Loading skeleton component
-  const ShopSkeleton = () => (
-    <Card className="overflow-hidden">
-      <Skeleton className="h-40 w-full" />
-      <CardContent className="p-4 space-y-2">
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-20 w-full" />
-      </CardContent>
-    </Card>
-  );
-
-  // Home View
-  const renderHome = () => (
-    <div className="space-y-12">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-muted to-muted/50 py-16 text-center">
-        <div className="container mx-auto px-4">
-          <h1 className="mb-4 text-4xl font-bold sm:text-5xl">
-            Discover Local Clothing Shops in Abu Hommos
-          </h1>
-          <p className="mb-8 text-lg text-muted-foreground sm:text-xl">
-            Support local brands and find the best fashion near you
-          </p>
-          <Button
-            size="lg"
-            className="gap-2"
-            onClick={() => setCurrentView('shops')}
-          >
-            Browse Shops
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="container mx-auto px-4">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold">
-            {selectedSubSubCategory
-              ? `${selectedCategoryData?.name} / ${selectedSubCategoryData?.name} / ${selectedSubSubCategory}`
-              : selectedSubCategory
-                ? `${selectedCategoryData?.name} / ${selectedSubCategoryData?.name}`
-                : selectedCategory
-                  ? selectedCategoryData?.name
-                  : 'Shop by Category'
-            }
-          </h2>
-          {(selectedCategory || selectedSubCategory) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (selectedSubCategory) {
-                  setSelectedSubCategory(null);
-                } else {
-                  setSelectedCategory(null);
-                }
-              }}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          )}
-        </div>
-        
-        {/* Show main categories when nothing selected */}
-        {!selectedCategory && (
-          <>
+          {/* Categories Section */}
+          <section className="container mx-auto px-4">
+            <h2 className="mb-6 text-2xl font-bold">Shop by Category</h2>
+            
             {/* Mobile: Slider with navigation buttons */}
             <div className="md:hidden relative">
               <Button
@@ -400,18 +309,14 @@ export default function MarketplacePage() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {categories.map((category) => (
-                  <Card
-                    key={category.id}
-                    className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                    }}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                      <span className="text-4xl">{category.icon}</span>
-                      <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                    </CardContent>
-                  </Card>
+                  <Link key={category.id} href={`/shops?category=${category.id}`}>
+                    <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
+                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                        <span className="text-4xl">{category.icon}</span>
+                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
               <Button
@@ -432,18 +337,14 @@ export default function MarketplacePage() {
             {categories.length <= 8 ? (
               <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
                 {categories.map((category) => (
-                  <Card
-                    key={category.id}
-                    className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md"
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                    }}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                      <span className="text-4xl">{category.icon}</span>
-                      <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                    </CardContent>
-                  </Card>
+                  <Link key={category.id} href={`/shops?category=${category.id}`}>
+                    <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md">
+                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                        <span className="text-4xl">{category.icon}</span>
+                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             ) : (
@@ -466,18 +367,14 @@ export default function MarketplacePage() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categories.map((category) => (
-                    <Card
-                      key={category.id}
-                      className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40"
-                      onClick={() => {
-                        setSelectedCategory(category.id);
-                      }}
-                    >
-                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                        <span className="text-4xl">{category.icon}</span>
-                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                      </CardContent>
-                    </Card>
+                    <Link key={category.id} href={`/shops?category=${category.id}`}>
+                      <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
+                        <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                          <span className="text-4xl">{category.icon}</span>
+                          <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
                 <Button
@@ -494,462 +391,27 @@ export default function MarketplacePage() {
                 </Button>
               </div>
             )}
-          </>
-        )}
+          </section>
 
-        {/* Show subcategories when category is selected */}
-        {selectedCategoryData && !selectedSubCategory && (
-          <>
-            {/* Mobile: Slider for subcategories */}
-            <div className="md:hidden relative">
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div
-                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {selectedCategoryData.subCategories.map((subCategory) => (
-                  <Card
-                    key={subCategory.id}
-                    className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40 ${
-                      selectedSubCategory === subCategory.id
-                        ? 'border-primary bg-primary/5 shadow-lg scale-105'
-                        : ''
-                    }`}
-                    onClick={() => {
-                      setSelectedSubCategory(subCategory.id);
-                    }}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                      <span className="text-4xl">{subCategory.icon}</span>
-                      <h3 className="text-lg font-semibold text-center">{subCategory.name}</h3>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Desktop/Tablet: Grid for subcategories */}
-            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-              {selectedCategoryData.subCategories.map((subCategory) => (
-                <Card
-                  key={subCategory.id}
-                  className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md ${
-                    selectedSubCategory === subCategory.id
-                      ? 'border-primary bg-primary/5 shadow-lg scale-105'
-                      : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedSubCategory(subCategory.id);
-                  }}
-                >
-                  <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                    <span className="text-4xl">{subCategory.icon}</span>
-                    <h3 className="text-lg font-semibold text-center">{subCategory.name}</h3>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Show sub-subcategories when subcategory is selected */}
-        {selectedSubCategoryData && selectedSubCategoryData.subSubCategories && selectedSubCategoryData.subSubCategories.length > 0 && (
-          <>
-            {/* Mobile: Slider for sub-subcategories */}
-            <div className="md:hidden relative">
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div
-                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
-                  <Card
-                    key={subSubCategory.id}
-                    className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40 ${
-                      selectedSubSubCategory === subSubCategory.id
-                        ? 'border-primary bg-primary/5 shadow-lg scale-105'
-                        : ''
-                    }`}
-                    onClick={() => {
-                      setSelectedSubSubCategory(subSubCategory.id);
-                      setCurrentView('shops');
-                    }}
-                  >
-                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                      <h3 className="text-lg font-semibold text-center">{subSubCategory.name}</h3>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Desktop/Tablet: Grid for sub-subcategories */}
-            <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-              {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
-                <Card
-                  key={subSubCategory.id}
-                  className={`cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md ${
-                    selectedSubSubCategory === subSubCategory.id
-                      ? 'border-primary bg-primary/5 shadow-lg scale-105'
-                      : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedSubSubCategory(subSubCategory.id);
-                    setCurrentView('shops');
-                  }}
-                >
-                  <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                    <h3 className="text-lg font-semibold text-center">{subSubCategory.name}</h3>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-primary px-4 py-16 text-center text-primary-foreground">
-        <div className="container mx-auto">
-          <h2 className="mb-4 text-3xl font-bold">Ready to Shop Local?</h2>
-          <p className="mb-8 text-lg text-primary-foreground/90">
-            Browse all shops and find your perfect style today
-          </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="gap-2"
-            onClick={() => setCurrentView('shops')}
-          >
-            <Store className="h-4 w-4" />
-            Browse All Shops
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-
-  // Shops Listing View
-  const renderShops = () => (
-    <div className="container mx-auto space-y-8 px-4 py-8">
-      {/* Header */}
-      <div>
-        <h1 className="mb-2 text-3xl font-bold">
-          {searchQuery ? `Search Results for "${searchQuery}"` : getCategoryDisplayName() || 'All Shops'}
-        </h1>
-        <p className="text-muted-foreground">
-          {searchQuery
-            ? `Found ${filteredShops.length} shop${filteredShops.length !== 1 ? 's' : ''} matching your search`
-            : `Discover amazing ${getCategoryDisplayName().toLowerCase()} stores in Abu Hommos`
-          }
-        </p>
-        {searchQuery && (
-          <Button
-            variant="ghost"
-            className="mt-2 gap-2"
-            onClick={() => setSearchQuery('')}
-          >
-            <X className="h-4 w-4" />
-            Clear search
-          </Button>
-        )}
-        {(selectedCategory || selectedSubCategory || selectedSubSubCategory) && (
-          <Button
-            variant="ghost"
-            className="mt-2 gap-2"
-            onClick={() => setSelectedCategory(null)}
-          >
-            <X className="h-4 w-4" />
-            Clear filters
-          </Button>
-        )}
-      </div>
-
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={selectedCategory === null ? 'default' : 'outline'}
-          onClick={() => setSelectedCategory(null)}
-        >
-          All Categories
-        </Button>
-        {categories.map((category) => (
-          <Button
-            key={category.id}
-            variant={selectedCategory === category.id ? 'default' : 'outline'}
-            onClick={() => setSelectedCategory(category.id)}
-            className="gap-2"
-          >
-            <span>{category.icon}</span>
-            {category.name}
-          </Button>
-        ))}
-      </div>
-
-      {/* Subcategory Filter */}
-      {selectedCategoryData && (
-        <div className="flex flex-wrap gap-2">
-          {selectedCategoryData.subCategories.map((subCategory) => (
-            <Button
-              key={subCategory.id}
-              variant={selectedSubCategory === subCategory.id ? 'default' : 'outline'}
-              onClick={() => setSelectedSubCategory(subCategory.id)}
-              className="gap-2"
-            >
-              <span>{subCategory.icon}</span>
-              {subCategory.name}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {/* Sub-subcategory Filter */}
-      {selectedSubCategoryData && selectedSubCategoryData.subSubCategories && selectedSubCategoryData.subSubCategories.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {selectedSubCategoryData.subSubCategories.map((subSubCategory) => (
-            <Button
-              key={subSubCategory.id}
-              variant={selectedSubSubCategory === subSubCategory.id ? 'default' : 'outline'}
-              onClick={() => setSelectedSubSubCategory(subSubCategory.id)}
-            >
-              {subSubCategory.name}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      {/* Shops Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <ShopSkeleton />
-          <ShopSkeleton />
-          <ShopSkeleton />
-          <ShopSkeleton />
-          <ShopSkeleton />
-          <ShopSkeleton />
-        </div>
-      ) : error ? (
-        <Card className="border-destructive">
-          <CardContent className="p-8 text-center">
-            <p className="text-destructive">{error}</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      ) : filteredShops.length === 0 ? (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Store className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h3 className="mb-2 text-lg font-semibold">No Shops Found</h3>
-            <p className="text-muted-foreground">
-              {selectedCategory
-                ? `No shops found in ${selectedCategory} category.`
-                : 'No shops available at the moment.'}
-            </p>
-            {selectedCategory && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setSelectedCategory(null)}
-              >
-                View All Categories
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredShops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  // Shop Profile View
-  const renderShopProfile = () => {
-    if (!selectedShop) {
-      return (
-        <div className="container mx-auto px-4 py-8 text-center">
-          <p className="text-muted-foreground">No shop selected.</p>
-          <Button
-            className="mt-4"
-            onClick={() => setCurrentView('shops')}
-          >
-            Browse Shops
-          </Button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-8">
-        {/* Shop Banner */}
-        <div className="relative h-64 bg-gradient-to-br from-primary/20 to-primary/5">
-          {selectedShop.bannerImage ? (
-            <img
-              src={selectedShop.bannerImage}
-              alt={selectedShop.name}
-              loading="lazy"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-8xl">
-              🏪
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-        </div>
-
-        {/* Shop Info */}
-        <div className="container mx-auto px-4">
-          <div className="-mt-32 space-y-6">
-            {/* Shop Header Card */}
-            <Card className="p-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex-1 space-y-2">
-                  <h1 className="text-3xl font-bold">{selectedShop.name}</h1>
-                  {selectedShop.rating && (
-                    <div className="flex items-center gap-2">
-                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                      <span className="font-semibold">{selectedShop.rating}</span>
-                      <span className="text-muted-foreground">Rating</span>
-                    </div>
-                  )}
-                  <p className="text-muted-foreground">{selectedShop.description}</p>
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {selectedShop.address}
-                    </div>
-                  </div>
-                </div>
+          {/* CTA Section */}
+          <section className="bg-primary px-4 py-16 text-center text-primary-foreground">
+            <div className="container mx-auto">
+              <h2 className="mb-4 text-3xl font-bold">Ready to Shop Local?</h2>
+              <p className="mb-8 text-lg text-primary-foreground/90">
+                Browse all shops and find your perfect style today
+              </p>
+              <Link href="/shops">
                 <Button
                   size="lg"
-                  className="gap-2 bg-green-600 text-white hover:bg-green-700"
-                  onClick={() => {
-                    const message = `Hi, I'm interested in your shop ${selectedShop.name}`;
-                    window.open(generateWhatsAppLink(selectedShop.whatsappNumber, message), '_blank');
-                  }}
+                  variant="secondary"
+                  className="gap-2"
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  Contact Shop
+                  Browse All Shops
                 </Button>
-              </div>
-            </Card>
-
-            {/* Products Section */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Package className="h-6 w-6" />
-                <h2 className="text-2xl font-bold">Products</h2>
-              </div>
-
-              {isLoading ? (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i} className="overflow-hidden">
-                      <Skeleton className="aspect-square w-full" />
-                      <CardContent className="p-4 space-y-2">
-                        <Skeleton className="h-5 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : products.length === 0 ? (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Package className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                    <h3 className="mb-2 text-lg font-semibold">No Products Yet</h3>
-                    <p className="text-muted-foreground">
-                      This shop hasn't added any products yet.
-                    </p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      shopName={selectedShop.name}
-                      shopWhatsApp={selectedShop.whatsappNumber}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
+              </Link>
+            </div>
+          </section>
         </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1">
-        {currentView === 'home' && (
-          <>
-            <AdsCarousel />
-            {renderHome()}
-          </>
-        )}
-        {currentView === 'shops' && renderShops()}
-        {currentView === 'shop-profile' && renderShopProfile()}
       </main>
       <Footer />
     </div>

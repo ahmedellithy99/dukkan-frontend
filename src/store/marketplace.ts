@@ -1,11 +1,7 @@
 import { create } from 'zustand';
-import type { Shop, Product, ViewType, Category } from '@/types/marketplace';
+import type { Shop, Product, Category } from '@/types/marketplace';
 
 interface MarketplaceState {
-  // Current view
-  currentView: ViewType;
-  setCurrentView: (view: ViewType) => void;
-
   // Search query
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -21,10 +17,6 @@ interface MarketplaceState {
   // Selected sub-subcategory
   selectedSubSubCategory: string | null;
   setSelectedSubSubCategory: (subSubCategory: string | null) => void;
-
-  // Selected shop for profile view
-  selectedShop: Shop | null;
-  setSelectedShop: (shop: Shop | null) => void;
 
   // Shops data
   shops: Shop[];
@@ -49,12 +41,10 @@ interface MarketplaceState {
 }
 
 const initialState = {
-  currentView: 'home' as ViewType,
   searchQuery: '',
   selectedCategory: null,
   selectedSubCategory: null,
   selectedSubSubCategory: null,
-  selectedShop: null,
   shops: [],
   featuredShops: [],
   products: [],
@@ -65,8 +55,6 @@ const initialState = {
 export const useMarketplaceStore = create<MarketplaceState>((set) => ({
   ...initialState,
 
-  setCurrentView: (view) => set({ currentView: view }),
-
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   setSelectedCategory: (category) => set({ selectedCategory: category, selectedSubCategory: null, selectedSubSubCategory: null }),
@@ -74,8 +62,6 @@ export const useMarketplaceStore = create<MarketplaceState>((set) => ({
   setSelectedSubCategory: (subCategory) => set({ selectedSubCategory: subCategory, selectedSubSubCategory: null }),
 
   setSelectedSubSubCategory: (subSubCategory) => set({ selectedSubSubCategory: subSubCategory }),
-
-  setSelectedShop: (shop) => set({ selectedShop: shop }),
 
   setShops: (shops) => set({ shops }),
 
