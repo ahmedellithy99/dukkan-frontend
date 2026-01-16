@@ -38,8 +38,12 @@ export function Navbar() {
               className="flex items-center gap-2 px-2"
               onClick={() => setCurrentView('home')}
             >
-              <ShoppingBag className="h-6 w-6" />
-              <span className="text-xl font-bold hidden sm:inline">Abu Hommos Market</span>
+              <img
+                src="/dukkan-logo.svg"
+                alt="Dukkan"
+                className="h-6 sm:h-8 w-auto"
+              />
+              <span className="text-lg sm:text-2xl font-bold font-arabic">دكان</span>
             </Button>
           </div>
 
@@ -77,10 +81,10 @@ export function Navbar() {
                 <Button
                   key={item.id}
                   variant={isActive ? 'secondary' : 'ghost'}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 px-2 h-8 sm:h-auto"
                   onClick={() => setCurrentView(item.id)}
                 >
-                  <Icon className="h-4 w-4 sm:hidden" />
+                  <Icon className="h-4 w-4" />
                   <span className="hidden sm:inline">{item.label}</span>
                 </Button>
               );
@@ -91,3 +95,4 @@ export function Navbar() {
     </header>
   );
 }
+
