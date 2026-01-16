@@ -29,13 +29,13 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between gap-4">
+      <nav className="container mx-auto px-3 py-3 sm:px-4 sm:py-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <Button
               variant="ghost"
-              className="flex items-center gap-2 px-2"
+              className="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 h-9 sm:h-auto"
               onClick={() => setCurrentView('home')}
             >
               <img
@@ -48,24 +48,24 @@ export function Navbar() {
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-4">
+          <div className="flex-1 max-w-md mx-1 sm:mx-4 min-w-0">
             <div className={`relative transition-all duration-200 ${isSearchFocused ? 'scale-105' : ''}`}>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search shops and products..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
-                className="pl-10 pr-10"
+                className="pl-11 pr-11 h-10 sm:h-auto text-base sm:text-sm"
               />
               {searchQuery && (
                 <button
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               )}
             </div>
@@ -81,7 +81,7 @@ export function Navbar() {
                 <Button
                   key={item.id}
                   variant={isActive ? 'secondary' : 'ghost'}
-                  className="flex items-center gap-2 px-2 h-8 sm:h-auto"
+                  className="flex items-center gap-2 px-2 h-9 sm:h-auto"
                   onClick={() => setCurrentView(item.id)}
                 >
                   <Icon className="h-4 w-4" />
