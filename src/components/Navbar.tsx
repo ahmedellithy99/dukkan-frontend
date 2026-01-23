@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Home, Store, Package, Search, X, Clock, TrendingUp } from 'lucide-react';
 import { mockData } from '@/lib/api';
 import Link from 'next/link';
+import { ThemeToggleSimple } from '@/components/theme-toggle';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -349,6 +350,9 @@ export function Navbar() {
                     </Link>
                   );
                 })}
+                
+                {/* Theme Toggle - Desktop */}
+                <ThemeToggleSimple />
               </div>
 
               {/* Mobile: Show nav items + search icon at the end */}
@@ -381,6 +385,9 @@ export function Navbar() {
                 >
                   <Search className="h-4 w-4" />
                 </Button>
+
+                {/* Theme Toggle - Mobile */}
+                <ThemeToggleSimple />
               </div>
             </div>
           </div>
