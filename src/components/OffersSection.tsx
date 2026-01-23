@@ -93,9 +93,9 @@ export function OffersSection({ offers }: OffersSectionProps) {
         </Button>
       </div>
 
-      {/* Desktop: Grid layout - 5 columns, up to 25 offers (5 rows) */}
+      {/* Desktop: Grid layout - 5 columns, 2 rows (10 offers max) */}
       <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {offers.slice(0, 25).map((offer) => (
+        {offers.slice(0, 10).map((offer) => (
           <OfferCard 
             key={offer.id} 
             offer={offer} 
