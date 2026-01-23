@@ -136,9 +136,9 @@ function OfferCard({ offer, onContact, className = '' }: OfferCardProps) {
   const isExpired = daysLeft < 0;
 
   return (
-    <Card className={`group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 ${className} ${isExpired ? 'opacity-60' : ''}`}>
-      {/* Offer Image - Smaller aspect ratio */}
-      <div className="relative aspect-[4/2.5] bg-gradient-to-br from-muted to-muted-50">
+    <Card className={`group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 ${className} ${isExpired ? 'opacity-60' : ''} flex flex-col h-full`}>
+      {/* Offer Image - Fixed aspect ratio */}
+      <div className="relative aspect-[4/2.5] bg-gradient-to-br from-muted to-muted-50 flex-shrink-0">
         {offer.imageUrl ? (
           <img
             src={offer.imageUrl}
@@ -152,14 +152,14 @@ function OfferCard({ offer, onContact, className = '' }: OfferCardProps) {
           </div>
         )}
         
-        {/* Discount Badge - Smaller */}
+        {/* Discount Badge */}
         <div className="absolute top-2 left-2">
           <Badge className="bg-red-500 hover:bg-red-600 text-white font-bold text-xs px-2 py-0.5">
             -{offer.discountPercentage}%
           </Badge>
         </div>
 
-        {/* Featured Badge - Smaller */}
+        {/* Featured Badge */}
         {offer.featured && (
           <div className="absolute top-2 right-2">
             <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold text-xs px-2 py-0.5">
@@ -168,7 +168,7 @@ function OfferCard({ offer, onContact, className = '' }: OfferCardProps) {
           </div>
         )}
 
-        {/* Expiry Warning - Smaller */}
+        {/* Expiry Warning */}
         {isExpiringSoon && !isExpired && (
           <div className="absolute bottom-2 left-2">
             <Badge variant="destructive" className="text-xs font-medium px-1.5 py-0.5">
@@ -187,24 +187,24 @@ function OfferCard({ offer, onContact, className = '' }: OfferCardProps) {
         )}
       </div>
 
-      <CardContent className="p-3">
-        {/* Shop Name - Smaller */}
-        <div className="text-xs text-muted-foreground mb-1">
-          {offer.shopName}
+      <CardContent className="p-3 flex-1 flex flex-col">
+        {/* Shop Name - Fixed height */}
+        <div className="text-xs text-muted-foreground mb-1 h-4 flex items-center">
+          <span className="truncate">{offer.shopName}</span>
         </div>
 
-        {/* Offer Title - Smaller */}
-        <h3 className="font-semibold text-sm mb-1.5 line-clamp-2">
+        {/* Offer Title - Fixed height for 2 lines */}
+        <h3 className="font-semibold text-sm mb-1.5 line-clamp-2 h-10 flex items-start">
           {offer.title}
         </h3>
 
-        {/* Description - Smaller */}
-        <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+        {/* Description - Fixed height for 2 lines */}
+        <p className="text-xs text-muted-foreground mb-2 line-clamp-2 h-8 flex items-start">
           {offer.description}
         </p>
 
-        {/* Price Section - Smaller */}
-        <div className="flex items-center gap-1.5 mb-2">
+        {/* Price Section - Fixed height */}
+        <div className="flex items-center gap-1.5 mb-2 h-6">
           <span className="text-lg font-bold text-primary">
             {offer.discountedPrice} EGP
           </span>
@@ -213,13 +213,13 @@ function OfferCard({ offer, onContact, className = '' }: OfferCardProps) {
           </span>
         </div>
 
-        {/* Valid Until - Smaller */}
-        <div className="text-xs text-muted-foreground mb-2">
+        {/* Valid Until - Fixed height */}
+        <div className="text-xs text-muted-foreground mb-2 h-4 flex items-center">
           Valid until: {formatDate(offer.validUntil)}
         </div>
       </CardContent>
 
-      <CardFooter className="p-3 pt-0">
+      <CardFooter className="p-3 pt-0 flex-shrink-0">
         <Button 
           onClick={onContact}
           className="w-full gap-1.5 text-xs py-1.5 h-8"
