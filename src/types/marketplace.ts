@@ -91,3 +91,20 @@ export interface ProductDetail extends Product {
     whatsappNumber: string;
   };
 }
+
+// Offer types
+export interface Offer {
+  id: string | number;
+  title: string;
+  description: string;
+  discountPercentage: number;
+  originalPrice: number;
+  discountedPrice: number;
+  imageUrl?: string;
+  shopId: string | number;
+  shopName: string;
+  shopWhatsApp: string;
+  category: Category;
+  validUntil: string; // ISO date string
+  featured?: boolean;
+}

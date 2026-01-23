@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Shop, Product, Category } from '@/types/marketplace';
+import type { Shop, Product, Category, Offer } from '@/types/marketplace';
 
 interface MarketplaceState {
   // Search query
@@ -28,6 +28,12 @@ interface MarketplaceState {
   products: Product[];
   setProducts: (products: Product[]) => void;
 
+  // Offers data
+  offers: Offer[];
+  featuredOffers: Offer[];
+  setOffers: (offers: Offer[]) => void;
+  setFeaturedOffers: (offers: Offer[]) => void;
+
   // Loading states
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -48,6 +54,8 @@ const initialState = {
   shops: [],
   featuredShops: [],
   products: [],
+  offers: [],
+  featuredOffers: [],
   isLoading: false,
   error: null,
 };
@@ -68,6 +76,10 @@ export const useMarketplaceStore = create<MarketplaceState>((set) => ({
   setFeaturedShops: (shops) => set({ featuredShops: shops }),
 
   setProducts: (products) => set({ products }),
+
+  setOffers: (offers) => set({ offers }),
+
+  setFeaturedOffers: (offers) => set({ featuredOffers: offers }),
 
   setIsLoading: (loading) => set({ isLoading: loading }),
 

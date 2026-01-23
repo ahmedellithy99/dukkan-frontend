@@ -5,6 +5,7 @@ import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 import { AdsCarousel } from '@/components/AdsCarousel';
+import { OffersSection } from '@/components/OffersSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -15,9 +16,12 @@ import Link from 'next/link';
 export default function MarketplacePage() {
   const {
     shops,
+    featuredOffers,
     setShops,
     setFeaturedShops,
     setProducts,
+    setOffers,
+    setFeaturedOffers,
     setIsLoading,
     setError,
   } = useMarketplaceStore();
@@ -38,6 +42,8 @@ export default function MarketplacePage() {
         setShops(mockData.shops);
         setFeaturedShops(mockData.shops.filter(shop => shop.featured));
         setProducts(mockData.products);
+        setOffers(mockData.offers);
+        setFeaturedOffers(mockData.offers.filter(offer => offer.featured));
       } catch (err) {
         setError('Failed to load data. Please try again.');
         console.error('Error loading data:', err);
@@ -47,7 +53,7 @@ export default function MarketplacePage() {
     };
 
     loadData();
-  }, [setShops, setFeaturedShops, setProducts, setIsLoading, setError]);
+  }, [setShops, setFeaturedShops, setProducts, setOffers, setFeaturedOffers, setIsLoading, setError]);
 
   const categories: CategoryWithSubCategories[] = [
     {
@@ -392,6 +398,9 @@ export default function MarketplacePage() {
               </div>
             )}
           </section>
+
+          {/* Offers Section */}
+          <OffersSection offers={featuredOffers} />
 
           {/* CTA Section */}
           <section className="bg-primary px-4 py-16 text-center text-primary-foreground">
