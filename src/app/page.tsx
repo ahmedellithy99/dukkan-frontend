@@ -406,17 +406,28 @@ export default function MarketplacePage() {
             <div className="container mx-auto">
               <h2 className="mb-4 text-3xl font-bold">Ready to Shop Local?</h2>
               <p className="mb-8 text-lg text-primary-foreground/90">
-                Browse all shops and find your perfect style today
+                Browse all shops and products to find your perfect style today
               </p>
-              <Link href="/shops">
-                <Button
-                  size="lg"
-                  variant="secondary"
-                  className="gap-2"
-                >
-                  Browse All Shops
-                </Button>
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/shops">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="gap-2"
+                  >
+                    Browse All Shops
+                  </Button>
+                </Link>
+                <Link href="/products">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="gap-2 bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                  >
+                    View All Products
+                  </Button>
+                </Link>
+              </div>
             </div>
           </section>
         </div>

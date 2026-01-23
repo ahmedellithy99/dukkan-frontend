@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Home, Store, Search, X } from 'lucide-react';
+import { Home, Store, Package, Search, X } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navbar() {
@@ -17,21 +17,24 @@ export function Navbar() {
   const navItems = [
     { id: 'home' as const, label: 'Home', icon: Home, href: '/' },
     { id: 'shops' as const, label: 'Shops', icon: Store, href: '/shops' },
+    { id: 'products' as const, label: 'Products', icon: Package, href: '/products' },
   ];
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (query.trim()) {
-      // Navigate to shops page with search query
-      router.push(`/shops?search=${encodeURIComponent(query)}`);
+      // Navigate to products page with search query for better product search experience
+      router.push(`/products?search=${encodeURIComponent(query)}`);
     }
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    // Clear search from URL if on shops page
+    // Clear search from URL if on shops or products page
     if (pathname === '/shops') {
       router.push('/shops');
+    } else if (pathname === '/products') {
+      router.push('/products');
     }
   };
 

@@ -72,10 +72,15 @@ export function ShopCard({ shop }: ShopCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter>
-        <Link href={`/shops/${shop.id}`} className="w-full">
-          <Button className="w-full">
+      <CardFooter className="flex gap-2">
+        <Link href={`/shops/${shop.id}`} className="flex-1">
+          <Button className="w-full" variant="default">
             View Shop
+          </Button>
+        </Link>
+        <Link href={`/products?shop=${shop.id}`} className="flex-1">
+          <Button className="w-full" variant="outline">
+            Products
           </Button>
         </Link>
       </CardFooter>
