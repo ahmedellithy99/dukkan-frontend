@@ -241,10 +241,9 @@ export function Navbar() {
               </Link>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-md mx-1 sm:mx-4 min-w-0 relative" ref={searchRef}>
-              {/* Desktop Search */}
-              <div className={`hidden sm:block relative transition-all duration-200 ${isSearchFocused ? 'scale-105' : ''}`}>
+            {/* Desktop Search Bar */}
+            <div className="hidden sm:flex flex-1 max-w-md mx-4 min-w-0 relative" ref={searchRef}>
+              <div className={`relative w-full transition-all duration-200 ${isSearchFocused ? 'scale-105' : ''}`}>
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
                 <Input
                   ref={inputRef}
@@ -267,18 +266,9 @@ export function Navbar() {
                 )}
               </div>
 
-              {/* Mobile Search Button */}
-              <button
-                onClick={handleMobileSearchOpen}
-                className="sm:hidden w-full flex items-center gap-3 px-4 py-3 bg-muted/50 rounded-lg text-left"
-              >
-                <Search className="h-5 w-5 text-muted-foreground" />
-                <span className="text-muted-foreground">Search products, shops...</span>
-              </button>
-
               {/* Desktop Search Suggestions Dropdown */}
               {showSuggestions && (
-                <Card className="hidden sm:block absolute top-full left-0 right-0 mt-1 shadow-lg border z-50 max-h-96 overflow-y-auto rounded-md">
+                <Card className="absolute top-full left-0 right-0 mt-1 shadow-lg border z-50 max-h-96 overflow-y-auto rounded-md">
                   <CardContent className="p-0">
                     {searchSuggestions.length > 0 ? (
                       <div className="py-2">
@@ -340,22 +330,58 @@ export function Navbar() {
 
             {/* Navigation Links */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
+              {/* Desktop: Show all nav items with text */}
+              <div className="hidden sm:flex items-center gap-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
 
-                return (
-                  <Link key={item.id} href={item.href}>
-                    <Button
-                      variant={isActive ? 'secondary' : 'ghost'}
-                      className="flex items-center gap-2 px-2 h-9 sm:h-auto"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="hidden sm:inline">{item.label}</span>
-                    </Button>
-                  </Link>
-                );
-              })}
+                  return (
+                    <Link key={item.id} href={item.href}>
+                      <Button
+                        variant={isActive ? 'secondary' : 'ghost'}
+                        className="flex items-center gap-2 px-2 sm:px-3 h-9 sm:h-auto min-w-0"
+                        title={item.label}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="hidden md:inline text-sm">{item.label}</span>
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Mobile: Show nav items + search icon at the end */}
+              <div className="sm:hidden flex items-center gap-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+
+                  return (
+                    <Link key={item.id} href={item.href}>
+                      <Button
+                        variant={isActive ? 'secondary' : 'ghost'}
+                        size="icon"
+                        className="h-9 w-9"
+                        title={item.label}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  );
+                })}
+                
+                {/* Search Icon at the far right */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleMobileSearchOpen}
+                  className="h-9 w-9"
+                  title="Search"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </nav>
@@ -490,4 +516,3 @@ export function Navbar() {
     </>
   );
 }
-
