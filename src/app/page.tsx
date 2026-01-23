@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -15,7 +15,6 @@ import Link from 'next/link';
 
 export default function MarketplacePage() {
   const {
-    shops,
     featuredOffers,
     setShops,
     setFeaturedShops,
