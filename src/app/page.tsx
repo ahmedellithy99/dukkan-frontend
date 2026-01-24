@@ -292,7 +292,7 @@ export default function MarketplacePage() {
 
           {/* Categories Section */}
           <section className="container mx-auto px-4">
-            <h2 className="mb-6 text-2xl font-bold">Shop by Category</h2>
+            <h2 className="mb-6 text-2xl font-bold">Products by Category</h2>
             
             {/* Mobile: Slider with navigation buttons */}
             <div className="md:hidden relative">
@@ -314,7 +314,7 @@ export default function MarketplacePage() {
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {categories.map((category) => (
-                  <Link key={category.id} href={`/shops?category=${category.id}`}>
+                  <Link key={category.id} href={`/products?category=${category.id}`}>
                     <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
                       <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
                         <span className="text-4xl">{category.icon}</span>
@@ -342,7 +342,7 @@ export default function MarketplacePage() {
             {categories.length <= 8 ? (
               <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
                 {categories.map((category) => (
-                  <Link key={category.id} href={`/shops?category=${category.id}`}>
+                  <Link key={category.id} href={`/products?category=${category.id}`}>
                     <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md">
                       <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
                         <span className="text-4xl">{category.icon}</span>
@@ -372,7 +372,7 @@ export default function MarketplacePage() {
                   style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                   {categories.map((category) => (
-                    <Link key={category.id} href={`/shops?category=${category.id}`}>
+                    <Link key={category.id} href={`/products?category=${category.id}`}>
                       <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
                         <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
                           <span className="text-4xl">{category.icon}</span>
