@@ -3,11 +3,28 @@
  * Configure your Laravel API base URL in environment variable: NEXT_PUBLIC_API_BASE_URL
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.abuhommos-marketplace.com/api';
+import type {
+  ApiResponse,
+  ApiErrorResponse,
+  Product,
+  Shop,
+  Category,
+  Subcategory,
+  Attribute,
+  AttributeValue,
+  AdCarousel,
+  SearchSuggestionsResponse,
+  ProductStats,
+  ProductFilters,
+  ShopFilters,
+} from '@/types/marketplace';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://your-domain.com/api/v1';
 
 export const apiConfig = {
   baseURL: API_BASE_URL,
   timeout: 10000,
+  version: 'v1.0.0',
 };
 
 /**
@@ -16,7 +33,7 @@ export const apiConfig = {
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<T> {
+): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
 
   try {
@@ -29,11 +46,14 @@ async function apiRequest<T>(
       },
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const errorData = data as ApiErrorResponse;
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
     }
 
-    return await response.json();
+    return data as ApiResponse<T>;
   } catch (error) {
     console.error('API Request failed:', error);
     throw error;
@@ -41,50 +61,93 @@ async function apiRequest<T>(
 }
 
 /**
- * Shops API
+ * Build query string from filters
  */
-export const shopsApi = {
-  /**
-   * Get all shops
-   */
-  getAll: (category?: string) =>
-    apiRequest(`/shops${category ? `?category=${category}` : ''}`),
-
-  /**
-   * Get featured shops
-   */
-  getFeatured: () => apiRequest('/shops/featured'),
-
-  /**
-   * Get shop by slug
-   */
-  getBySlug: (slug: string) => apiRequest(`/shops/${slug}`),
-
-  /**
-   * Get shop by ID
-   */
-  getById: (id: string | number) => apiRequest(`/shops/${id}`),
-};
+function buildQueryString(filters: Record<string, any>): string {
+  const params = new URLSearchParams();
+  
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    
+    if (key === 'attributes' && typeof value === 'object') {
+      // Handle attributes filter: attributes[color]=12,13&attributes[size]=44
+      Object.entries(value).forEach(([attrName, attrValues]) => {
+        if (Array.isArray(attrValues) && attrValues.length > 0) {
+          params.append(`attributes[${attrName}]`, attrValues.join(','));
+        }
+      });
+    } else if (key === 'near' && typeof value === 'object') {
+      // Handle proximity filter: near[lat]=30.0444&near[lng]=31.2357&near[radius]=10
+      if (value.lat) params.append('near[lat]', value.lat.toString());
+      if (value.lng) params.append('near[lng]', value.lng.toString());
+      if (value.radius) params.append('near[radius]', value.radius.toString());
+    } else if (typeof value === 'boolean') {
+      params.append(key, value ? 'true' : 'false');
+    } else {
+      params.append(key, value.toString());
+    }
+  });
+  
+  const queryString = params.toString();
+  return queryString ? `?${queryString}` : '';
+}
 
 /**
  * Products API
  */
 export const productsApi = {
   /**
-   * Get products by shop ID
+   * Get all products with filters
    */
-  getByShopId: (shopId: string | number) =>
-    apiRequest(`/shops/${shopId}/products`),
+  getAll: async (filters: ProductFilters = {}) => {
+    const queryString = buildQueryString(filters);
+    return apiRequest<Product[]>(`/products${queryString}`);
+  },
 
   /**
-   * Get product by ID
+   * Get single product by slug
    */
-  getById: (id: string | number) => apiRequest(`/products/${id}`),
+  getBySlug: async (slug: string) => {
+    return apiRequest<Product>(`/products/${slug}`);
+  },
 
   /**
-   * Search products
+   * Track WhatsApp click
    */
-  search: (query: string) => apiRequest(`/products/search?q=${query}`),
+  trackWhatsAppClick: async (productSlug: string) => {
+    return apiRequest(`/products/${productSlug}/track/whatsapp`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Track location click
+   */
+  trackLocationClick: async (productSlug: string) => {
+    return apiRequest(`/products/${productSlug}/track/location`, {
+      method: 'POST',
+    });
+  },
+};
+
+/**
+ * Shops API
+ */
+export const shopsApi = {
+  /**
+   * Get all shops with filters
+   */
+  getAll: async (filters: ShopFilters = {}) => {
+    const queryString = buildQueryString(filters);
+    return apiRequest<Shop[]>(`/shops${queryString}`);
+  },
+
+  /**
+   * Get single shop by slug
+   */
+  getBySlug: async (slug: string) => {
+    return apiRequest<Shop>(`/shops/${slug}`);
+  },
 };
 
 /**
@@ -94,12 +157,49 @@ export const categoriesApi = {
   /**
    * Get all categories
    */
-  getAll: () => apiRequest('/categories'),
+  getAll: async () => {
+    return apiRequest<Category[]>('/categories');
+  },
 
   /**
-   * Get shops by category
+   * Get single category by slug
    */
-  getShops: (category: string) => apiRequest(`/categories/${category}/shops`),
+  getBySlug: async (slug: string) => {
+    return apiRequest<Category>(`/categories/${slug}`);
+  },
+
+  /**
+   * Get subcategories for a category
+   */
+  getSubcategories: async (categorySlug: string) => {
+    return apiRequest<Subcategory[]>(`/categories/${categorySlug}/subcategories`);
+  },
+
+  /**
+   * Get single subcategory
+   */
+  getSubcategory: async (categorySlug: string, subcategorySlug: string) => {
+    return apiRequest<Subcategory>(`/categories/${categorySlug}/subcategories/${subcategorySlug}`);
+  },
+};
+
+/**
+ * Attributes API
+ */
+export const attributesApi = {
+  /**
+   * Get all attributes with their values
+   */
+  getAll: async () => {
+    return apiRequest<Attribute[]>('/attributes');
+  },
+
+  /**
+   * Get single attribute by slug
+   */
+  getBySlug: async (slug: string) => {
+    return apiRequest<Attribute>(`/attributes/${slug}`);
+  },
 };
 
 /**
@@ -107,24 +207,45 @@ export const categoriesApi = {
  */
 export const offersApi = {
   /**
-   * Get all offers
+   * Get products with active discounts
    */
-  getAll: () => apiRequest('/offers'),
+  getAll: async (limit?: number) => {
+    const queryString = limit ? `?limit=${limit}` : '';
+    return apiRequest<Product[]>(`/offers${queryString}`);
+  },
+};
+
+/**
+ * Ad Carousel API
+ */
+export const adCarouselApi = {
+  /**
+   * Get all active ad carousels
+   */
+  getAll: async () => {
+    return apiRequest<AdCarousel[]>('/ad-carousels');
+  },
+};
+
+/**
+ * Search API
+ */
+export const searchApi = {
+  /**
+   * Get search suggestions (autocomplete)
+   */
+  getSuggestions: async (query: string, type: 'products' | 'shops', limit: number = 5) => {
+    const queryString = buildQueryString({ q: query, type, limit });
+    return apiRequest<SearchSuggestionsResponse>(`/search/suggestions${queryString}`);
+  },
 
   /**
-   * Get featured offers
+   * Full search with pagination
    */
-  getFeatured: () => apiRequest('/offers/featured'),
-
-  /**
-   * Get offers by shop ID
-   */
-  getByShopId: (shopId: string | number) => apiRequest(`/shops/${shopId}/offers`),
-
-  /**
-   * Get offers by category
-   */
-  getByCategory: (category: string) => apiRequest(`/offers?category=${category}`),
+  search: async (query: string, type: 'products' | 'shops', limit: number = 10) => {
+    const queryString = buildQueryString({ q: query, type, limit });
+    return apiRequest<Product[] | Shop[]>(`/search${queryString}`);
+  },
 };
 
 /**
@@ -137,7 +258,18 @@ export const generateWhatsAppLink = (phoneNumber: string, message: string) => {
 };
 
 export const formatPrice = (price: number, currency: string = 'EGP') => {
-  return `${price} ${currency}`;
+  return `${price.toLocaleString()} ${currency}`;
+};
+
+export const calculateDiscountedPrice = (price: number, discountType: 'percent' | 'amount', discountValue: number): number => {
+  if (discountType === 'percent') {
+    return price - (price * discountValue / 100);
+  }
+  return price - discountValue;
+};
+
+export const getDiscountPercentage = (originalPrice: number, discountedPrice: number): number => {
+  return Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
 };
 export const mockData = {
   shops: [
@@ -768,5 +900,198 @@ export const mockData = {
       validUntil: '2026-02-25T23:59:59.000Z',
       featured: false,
     },
+  ],
+};
+
+
+/**
+ * Mock Data for Development
+ * TODO: Remove this when backend is fully integrated
+ */
+export const mockData = {
+  shops: [
+    {
+      id: 1,
+      name: 'Fashion Hub',
+      slug: 'fashion-hub',
+      description: 'Your one-stop shop for trendy fashion',
+      whatsapp_number: '+201234567890',
+      phone_number: '+201234567890',
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 2,
+      name: 'Elegant Styles',
+      slug: 'elegant-styles',
+      description: 'Modern and elegant clothing for women',
+      whatsapp_number: '+201234567891',
+      phone_number: '+201234567891',
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 3,
+      name: 'Kids Corner',
+      slug: 'kids-corner',
+      description: 'Fun and comfortable clothes for kids',
+      whatsapp_number: '+201234567892',
+      phone_number: '+201234567892',
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+  ],
+  products: [
+    {
+      id: 1,
+      shop_id: 1,
+      subcategory_id: 1,
+      name: 'Casual Shirt',
+      slug: 'casual-shirt',
+      description: 'Comfortable cotton shirt',
+      price: 250,
+      stock_quantity: 50,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 2,
+      shop_id: 1,
+      subcategory_id: 1,
+      name: 'Formal Trousers',
+      slug: 'formal-trousers',
+      description: 'Elegant formal wear',
+      price: 350,
+      stock_quantity: 30,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 3,
+      shop_id: 2,
+      subcategory_id: 2,
+      name: 'Summer Dress',
+      slug: 'summer-dress',
+      description: 'Light and breathable summer dress',
+      price: 450,
+      stock_quantity: 25,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 4,
+      shop_id: 3,
+      subcategory_id: 3,
+      name: 'Kids T-Shirt',
+      slug: 'kids-tshirt',
+      description: 'Colorful t-shirt for kids',
+      price: 150,
+      stock_quantity: 100,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 5,
+      shop_id: 1,
+      subcategory_id: 1,
+      name: 'Denim Jeans',
+      slug: 'denim-jeans',
+      description: 'Classic blue denim jeans for everyday wear',
+      price: 400,
+      stock_quantity: 40,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 6,
+      shop_id: 2,
+      subcategory_id: 2,
+      name: 'Evening Gown',
+      slug: 'evening-gown',
+      description: 'Elegant evening dress for special occasions',
+      price: 800,
+      stock_quantity: 15,
+      discount_type: 'percent' as const,
+      discount_value: 20,
+      discounted_price: 640,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 7,
+      shop_id: 1,
+      subcategory_id: 1,
+      name: 'Leather Jacket',
+      slug: 'leather-jacket',
+      description: 'Premium leather jacket for style and warmth',
+      price: 1200,
+      stock_quantity: 10,
+      discount_type: 'amount' as const,
+      discount_value: 200,
+      discounted_price: 1000,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 8,
+      shop_id: 3,
+      subcategory_id: 3,
+      name: 'Educational Puzzle',
+      slug: 'educational-puzzle',
+      description: 'Fun learning puzzle for children aged 5-10',
+      price: 80,
+      stock_quantity: 60,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 9,
+      shop_id: 2,
+      subcategory_id: 4,
+      name: 'High Heels',
+      slug: 'high-heels',
+      description: 'Stylish high heels for formal events',
+      price: 600,
+      stock_quantity: 20,
+      discount_type: 'percent' as const,
+      discount_value: 15,
+      discounted_price: 510,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 10,
+      shop_id: 1,
+      subcategory_id: 1,
+      name: 'Polo Shirt',
+      slug: 'polo-shirt',
+      description: 'Classic polo shirt for casual and business casual wear',
+      price: 300,
+      stock_quantity: 45,
+      is_active: true,
+      created_at: '2026-01-01T00:00:00.000Z',
+      updated_at: '2026-01-01T00:00:00.000Z',
+    },
+  ],
+  categories: [
+    { id: 1, name: 'Clothes', slug: 'clothes' },
+    { id: 2, name: 'Shoes', slug: 'shoes' },
+    { id: 3, name: 'Accessories', slug: 'accessories' },
+    { id: 4, name: 'Cosmetics', slug: 'cosmetics' },
+    { id: 5, name: 'Toys', slug: 'toys' },
+    { id: 6, name: 'Phones', slug: 'phones' },
+    { id: 7, name: 'Laptops', slug: 'laptops' },
   ],
 };

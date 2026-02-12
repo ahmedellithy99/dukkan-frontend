@@ -46,4 +46,7 @@ dev.log
 test
 prompt
 
+# Kiro IDE
+.kiro
+
 server.log

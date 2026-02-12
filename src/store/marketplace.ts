@@ -1,38 +1,34 @@
 import { create } from 'zustand';
-import type { Shop, Product, Category, Offer } from '@/types/marketplace';
+import type { Shop, Product, Category, Subcategory, Attribute } from '@/types/marketplace';
 
 interface MarketplaceState {
   // Search query
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 
-  // Selected category filter
-  selectedCategory: Category | null;
-  setSelectedCategory: (category: Category | null) => void;
+  // Categories data
+  categories: Category[];
+  setCategories: (categories: Category[]) => void;
 
-  // Selected subcategory
-  selectedSubCategory: string | null;
-  setSelectedSubCategory: (subCategory: string | null) => void;
+  // Subcategories data
+  subcategories: Subcategory[];
+  setSubcategories: (subcategories: Subcategory[]) => void;
 
-  // Selected sub-subcategory
-  selectedSubSubCategory: string | null;
-  setSelectedSubSubCategory: (subSubCategory: string | null) => void;
+  // Attributes data
+  attributes: Attribute[];
+  setAttributes: (attributes: Attribute[]) => void;
 
   // Shops data
   shops: Shop[];
-  featuredShops: Shop[];
   setShops: (shops: Shop[]) => void;
-  setFeaturedShops: (shops: Shop[]) => void;
 
   // Products data
   products: Product[];
   setProducts: (products: Product[]) => void;
 
-  // Offers data
-  offers: Offer[];
-  featuredOffers: Offer[];
-  setOffers: (offers: Offer[]) => void;
-  setFeaturedOffers: (offers: Offer[]) => void;
+  // Offers data (products with discounts)
+  offers: Product[];
+  setOffers: (offers: Product[]) => void;
 
   // Loading states
   isLoading: boolean;
@@ -48,14 +44,12 @@ interface MarketplaceState {
 
 const initialState = {
   searchQuery: '',
-  selectedCategory: null,
-  selectedSubCategory: null,
-  selectedSubSubCategory: null,
+  categories: [],
+  subcategories: [],
+  attributes: [],
   shops: [],
-  featuredShops: [],
   products: [],
   offers: [],
-  featuredOffers: [],
   isLoading: false,
   error: null,
 };
@@ -65,21 +59,17 @@ export const useMarketplaceStore = create<MarketplaceState>((set) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
-  setSelectedCategory: (category) => set({ selectedCategory: category, selectedSubCategory: null, selectedSubSubCategory: null }),
+  setCategories: (categories) => set({ categories }),
 
-  setSelectedSubCategory: (subCategory) => set({ selectedSubCategory: subCategory, selectedSubSubCategory: null }),
+  setSubcategories: (subcategories) => set({ subcategories }),
 
-  setSelectedSubSubCategory: (subSubCategory) => set({ selectedSubSubCategory: subSubCategory }),
+  setAttributes: (attributes) => set({ attributes }),
 
   setShops: (shops) => set({ shops }),
-
-  setFeaturedShops: (shops) => set({ featuredShops: shops }),
 
   setProducts: (products) => set({ products }),
 
   setOffers: (offers) => set({ offers }),
-
-  setFeaturedOffers: (offers) => set({ featuredOffers: offers }),
 
   setIsLoading: (loading) => set({ isLoading: loading }),
 
