@@ -1,6 +1,6 @@
 /**
  * API utility functions for Laravel backend integration
- * Configure your Laravel API base URL in environment variable: NEXT_PUBLIC_API_BASE_URL
+ * Supports subdomain-based city routing: cityslug.localhost:8000/api/v1
  */
 
 import type {
@@ -14,15 +14,75 @@ import type {
   AttributeValue,
   AdCarousel,
   SearchSuggestionsResponse,
+  SearchResponse,
   ProductStats,
   ProductFilters,
   ShopFilters,
 } from '@/types/marketplace';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://your-domain.com/api/v1';
+/**
+ * Get the city slug from the current hostname
+ * Examples:
+ * - cairo.localhost:3000 -> cairo
+ * - alexandria.example.com -> alexandria
+ * - localhost:3000 -> null (fallback to default)
+ */
+function getCitySlugFromHostname(): string | null {
+  if (typeof window === 'undefined') {
+    // Server-side: return null, will use default
+    return null;
+  }
+
+  const hostname = window.location.hostname;
+  
+  // Check if it's a subdomain (not just localhost or IP)
+  const parts = hostname.split('.');
+  
+  // If hostname is like "cairo.localhost" or "cairo.example.com"
+  if (parts.length >= 2 && parts[0] !== 'localhost' && parts[0] !== 'www') {
+    return parts[0]; // Return the subdomain (city slug)
+  }
+  
+  return null; // No city slug found
+}
+
+/**
+ * Get the API base URL based on environment and current city
+ * Priority:
+ * 1. Use NEXT_PUBLIC_API_BASE_URL if set (for custom configuration)
+ * 2. Auto-detect city from subdomain and construct URL
+ * 3. Fallback to default localhost:8000
+ */
+function getApiBaseUrl(): string {
+  // Check if custom API URL is set in environment
+  const envApiUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
+  if (envApiUrl) {
+    // Ensure it has protocol
+    if (!envApiUrl.startsWith('http://') && !envApiUrl.startsWith('https://')) {
+      return `http://${envApiUrl}`;
+    }
+    return envApiUrl;
+  }
+
+  // Auto-detect city from subdomain
+  const citySlug = getCitySlugFromHostname();
+  
+  if (citySlug) {
+    // Construct URL with city subdomain
+    return `http://${citySlug}.localhost:8000/api/v1`;
+  }
+
+  // Fallback to default (no city)
+  return 'http://localhost:8000/api/v1';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const apiConfig = {
-  baseURL: API_BASE_URL,
+  get baseURL() {
+    return getApiBaseUrl(); // Dynamic getter
+  },
   timeout: 10000,
   version: 'v1.0.0',
 };
@@ -34,7 +94,11 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
+  
+  // Get city slug for X-City header
+  const citySlug = getCitySlugFromHostname();
 
   try {
     const response = await fetch(url, {
@@ -42,6 +106,7 @@ async function apiRequest<T>(
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        ...(citySlug && { 'X-City': citySlug }), // Add X-City header if city slug exists
         ...options.headers,
       },
     });
@@ -244,7 +309,7 @@ export const searchApi = {
    */
   search: async (query: string, type: 'products' | 'shops', limit: number = 10) => {
     const queryString = buildQueryString({ q: query, type, limit });
-    return apiRequest<Product[] | Shop[]>(`/search${queryString}`);
+    return apiRequest<SearchResponse>(`/search${queryString}`);
   },
 };
 
@@ -271,6 +336,51 @@ export const calculateDiscountedPrice = (price: number, discountType: 'percent' 
 export const getDiscountPercentage = (originalPrice: number, discountedPrice: number): number => {
   return Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
 };
+
+/**
+ * Get category icon by name or slug
+ * Maps category names to their emoji icons for UI display
+ */
+export const getCategoryIcon = (categoryName: string): string => {
+  const iconMap: Record<string, string> = {
+    'clothes': '👕',
+    'shoes': '👟',
+    'accessories': '⌚',
+    'cosmetics': '💄',
+    'toys': '🧸',
+    'phones': '📱',
+    'laptops': '💻',
+    'electronics': '🔌',
+    'furniture': '🛋️',
+    'books': '📚',
+    'sports': '⚽',
+    'food': '🍔',
+    'jewelry': '💍',
+    'watches': '⌚',
+    'bags': '👜',
+  };
+
+  // Try exact match first (case-insensitive)
+  const lowerName = categoryName.toLowerCase();
+  if (iconMap[lowerName]) {
+    return iconMap[lowerName];
+  }
+
+  // Try partial match
+  for (const [key, icon] of Object.entries(iconMap)) {
+    if (lowerName.includes(key) || key.includes(lowerName)) {
+      return icon;
+    }
+  }
+
+  // Default icon
+  return '📦';
+};
+
+/**
+ * Mock Data for Development
+ * TODO: Remove this when backend is fully integrated
+ */
 export const mockData = {
   shops: [
     {
@@ -900,198 +1010,5 @@ export const mockData = {
       validUntil: '2026-02-25T23:59:59.000Z',
       featured: false,
     },
-  ],
-};
-
-
-/**
- * Mock Data for Development
- * TODO: Remove this when backend is fully integrated
- */
-export const mockData = {
-  shops: [
-    {
-      id: 1,
-      name: 'Fashion Hub',
-      slug: 'fashion-hub',
-      description: 'Your one-stop shop for trendy fashion',
-      whatsapp_number: '+201234567890',
-      phone_number: '+201234567890',
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 2,
-      name: 'Elegant Styles',
-      slug: 'elegant-styles',
-      description: 'Modern and elegant clothing for women',
-      whatsapp_number: '+201234567891',
-      phone_number: '+201234567891',
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 3,
-      name: 'Kids Corner',
-      slug: 'kids-corner',
-      description: 'Fun and comfortable clothes for kids',
-      whatsapp_number: '+201234567892',
-      phone_number: '+201234567892',
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-  ],
-  products: [
-    {
-      id: 1,
-      shop_id: 1,
-      subcategory_id: 1,
-      name: 'Casual Shirt',
-      slug: 'casual-shirt',
-      description: 'Comfortable cotton shirt',
-      price: 250,
-      stock_quantity: 50,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 2,
-      shop_id: 1,
-      subcategory_id: 1,
-      name: 'Formal Trousers',
-      slug: 'formal-trousers',
-      description: 'Elegant formal wear',
-      price: 350,
-      stock_quantity: 30,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 3,
-      shop_id: 2,
-      subcategory_id: 2,
-      name: 'Summer Dress',
-      slug: 'summer-dress',
-      description: 'Light and breathable summer dress',
-      price: 450,
-      stock_quantity: 25,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 4,
-      shop_id: 3,
-      subcategory_id: 3,
-      name: 'Kids T-Shirt',
-      slug: 'kids-tshirt',
-      description: 'Colorful t-shirt for kids',
-      price: 150,
-      stock_quantity: 100,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 5,
-      shop_id: 1,
-      subcategory_id: 1,
-      name: 'Denim Jeans',
-      slug: 'denim-jeans',
-      description: 'Classic blue denim jeans for everyday wear',
-      price: 400,
-      stock_quantity: 40,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 6,
-      shop_id: 2,
-      subcategory_id: 2,
-      name: 'Evening Gown',
-      slug: 'evening-gown',
-      description: 'Elegant evening dress for special occasions',
-      price: 800,
-      stock_quantity: 15,
-      discount_type: 'percent' as const,
-      discount_value: 20,
-      discounted_price: 640,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 7,
-      shop_id: 1,
-      subcategory_id: 1,
-      name: 'Leather Jacket',
-      slug: 'leather-jacket',
-      description: 'Premium leather jacket for style and warmth',
-      price: 1200,
-      stock_quantity: 10,
-      discount_type: 'amount' as const,
-      discount_value: 200,
-      discounted_price: 1000,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 8,
-      shop_id: 3,
-      subcategory_id: 3,
-      name: 'Educational Puzzle',
-      slug: 'educational-puzzle',
-      description: 'Fun learning puzzle for children aged 5-10',
-      price: 80,
-      stock_quantity: 60,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 9,
-      shop_id: 2,
-      subcategory_id: 4,
-      name: 'High Heels',
-      slug: 'high-heels',
-      description: 'Stylish high heels for formal events',
-      price: 600,
-      stock_quantity: 20,
-      discount_type: 'percent' as const,
-      discount_value: 15,
-      discounted_price: 510,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
-      id: 10,
-      shop_id: 1,
-      subcategory_id: 1,
-      name: 'Polo Shirt',
-      slug: 'polo-shirt',
-      description: 'Classic polo shirt for casual and business casual wear',
-      price: 300,
-      stock_quantity: 45,
-      is_active: true,
-      created_at: '2026-01-01T00:00:00.000Z',
-      updated_at: '2026-01-01T00:00:00.000Z',
-    },
-  ],
-  categories: [
-    { id: 1, name: 'Clothes', slug: 'clothes' },
-    { id: 2, name: 'Shoes', slug: 'shoes' },
-    { id: 3, name: 'Accessories', slug: 'accessories' },
-    { id: 4, name: 'Cosmetics', slug: 'cosmetics' },
-    { id: 5, name: 'Toys', slug: 'toys' },
-    { id: 6, name: 'Phones', slug: 'phones' },
-    { id: 7, name: 'Laptops', slug: 'laptops' },
   ],
 };
