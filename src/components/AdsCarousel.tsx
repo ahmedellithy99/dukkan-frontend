@@ -3,70 +3,55 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { AdCarousel } from '@/types/marketplace';
 
-interface AdBanner {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  link?: string;
-  backgroundColor?: string;
+interface AdsCarouselProps {
+  ads: AdCarousel[];
 }
 
-const mockAds: AdBanner[] = [
-  {
-    id: '1',
-    title: 'Summer Sale',
-    description: 'Up to 50% off on all summer collection',
-    imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1920&q=80',
-    link: '#',
-    backgroundColor: 'from-blue-500 to-purple-600',
-  },
-  {
-    id: '2',
-    title: 'New Arrivals',
-    description: 'Check out the latest fashion trends',
-    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1920&q=80',
-    link: '#',
-    backgroundColor: 'from-pink-500 to-rose-600',
-  },
-  {
-    id: '3',
-    title: 'Kids Special',
-    description: 'Buy 2 Get 1 Free on kids clothing',
-    imageUrl: 'https://images.unsplash.com/photo-1503919545889-aef636e10ad4?w=1920&q=80',
-    link: '#',
-    backgroundColor: 'from-green-500 to-emerald-600',
-  },
-  {
-    id: '4',
-    title: 'Men\'s Collection',
-    description: 'Premium quality at affordable prices',
-    imageUrl: 'https://images.unsplash.com/photo-1617137968427-85924c800a22?w=1920&q=80',
-    link: '#',
-    backgroundColor: 'from-orange-500 to-amber-600',
-  },
-  {
-    id: '5',
-    title: 'Women\'s Fashion',
-    description: 'Elegant styles for every occasion',
-    imageUrl: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=1920&q=80',
-    link: '#',
-    backgroundColor: 'from-violet-500 to-purple-600',
-  },
-];
+export function AdsCarousel({ ads }: AdsCarouselProps) {
+  // Helper function to get image URL from carousel_image (single or array)
+  const getImageUrl = (ad: AdCarousel): string | null => {
+    if (!ad.carousel_image) return null;
+    
+    // Handle array of MediaResource (website endpoint)
+    if (Array.isArray(ad.carousel_image)) {
+      if (ad.carousel_image.length === 0) return null;
+      const firstImage = ad.carousel_image[0];
+      return firstImage.large_url || firstImage.url;
+    }
+    
+    // Handle single MediaResource (admin endpoint)
+    return ad.carousel_image.large_url || ad.carousel_image.url || null;
+  };
 
-export function AdsCarousel() {
+  // Filter out ads that don't have required data - MUST be before any hooks
+  const validAds = ads?.filter(ad => {
+    const hasImage = getImageUrl(ad);
+    const hasTitle = ad.title;
+    return hasImage || hasTitle; // At least one of these should exist
+  }) || [];
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Debug logging
+  console.log('AdsCarousel rendered with:', {
+    adsCount: ads?.length || 0,
+    validAdsCount: validAds.length,
+    ads: ads,
+    firstAd: ads?.[0]
+  });
+
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % mockAds.length);
-  }, []);
+    if (validAds.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % validAds.length);
+  }, [validAds.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + mockAds.length) % mockAds.length);
-  }, []);
+    if (validAds.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + validAds.length) % validAds.length);
+  }, [validAds.length]);
 
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
@@ -74,20 +59,55 @@ export function AdsCarousel() {
 
   // Auto-scroll every 5 seconds
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || validAds.length === 0) return;
 
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isPaused, nextSlide]);
+  }, [isPaused, nextSlide, validAds.length]);
 
-  const handleBannerClick = (ad: AdBanner) => {
-    if (ad.link) {
-      window.open(ad.link, '_blank');
+  const handleBannerClick = (ad: AdCarousel) => {
+    if (ad.link_url) {
+      window.open(ad.link_url, '_blank');
     }
   };
+
+  // If no ads provided, show a loading skeleton or placeholder
+  if (!ads || ads.length === 0) {
+    return (
+      <div className="relative w-full overflow-hidden bg-gradient-to-br from-muted to-muted/50">
+        <div className="relative h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] flex items-center justify-center">
+          <div className="text-center text-muted-foreground">
+            <div className="animate-pulse">
+              <div className="text-4xl mb-4">🎪</div>
+              <p className="text-lg">Loading promotions...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If no valid ads after filtering, show placeholder
+  if (validAds.length === 0) {
+    return (
+      <div className="relative w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/10">
+        <div className="relative h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] flex items-center justify-center">
+          <div className="container mx-auto px-4 text-center">
+            <div className="text-4xl mb-4">🏪</div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              Welcome to Dukkan
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Discover amazing deals from local shops
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -97,42 +117,45 @@ export function AdsCarousel() {
     >
       {/* Main Carousel */}
       <div className="relative h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px]">
-        {mockAds.map((ad, index) => (
-          <div
-            key={ad.id}
-            className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-              index === currentIndex
-                ? 'opacity-100 translate-x-0'
-                : index < currentIndex
-                ? 'opacity-0 -translate-x-full'
-                : 'opacity-0 translate-x-full'
-            }`}
-          >
-            <button
-              onClick={() => handleBannerClick(ad)}
-              className={`w-full h-full bg-gradient-to-br ${ad.backgroundColor} hover:scale-[1.02] transition-transform duration-300`}
+        {validAds.map((ad, index) => {
+          // Get image URL using helper function
+          const imageUrl = getImageUrl(ad);
+          
+          return (
+            <div
+              key={`carousel-slide-${ad.id || index}`}
+              className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                index === currentIndex
+                  ? 'opacity-100 translate-x-0'
+                  : index < currentIndex
+                  ? 'opacity-0 -translate-x-full'
+                  : 'opacity-0 translate-x-full'
+              }`}
             >
-              {ad.imageUrl ? (
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  loading={index === currentIndex ? 'eager' : 'lazy'}
-                  className="w-full h-full object-cover"
-                />
-              ) : null}
-              <div className="container mx-auto px-4 h-full flex items-center">
-                <div className="max-w-2xl text-white">
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-                    {ad.title}
-                  </h2>
-                  <p className="text-lg sm:text-xl md:text-2xl drop-shadow-md">
-                    {ad.description}
-                  </p>
-                </div>
-              </div>
-            </button>
-          </div>
-        ))}
+              <button
+                onClick={() => handleBannerClick(ad)}
+                className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/10 hover:scale-[1.02] transition-transform duration-300"
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={ad.title || 'Promotional banner'}
+                    loading={index === currentIndex ? 'eager' : 'lazy'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="container mx-auto px-4 h-full flex items-center">
+                    <div className="max-w-2xl text-foreground">
+                      <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
+                        {ad.title || 'Special Offer'}
+                      </h2>
+                    </div>
+                  </div>
+                )}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {/* Navigation Arrows */}
@@ -158,9 +181,9 @@ export function AdsCarousel() {
 
       {/* Pagination Dots */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-black/30 backdrop-blur-sm rounded-full px-4 py-2">
-        {mockAds.map((_, index) => (
+        {validAds.map((ad, index) => (
           <button
-            key={index}
+            key={`carousel-dot-${ad.id || index}`}
             onClick={() => goToSlide(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index === currentIndex
@@ -174,8 +197,10 @@ export function AdsCarousel() {
 
       {/* Slide Counter */}
       <div className="absolute top-4 right-4 bg-black/30 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium">
-        {currentIndex + 1} / {mockAds.length}
+        {currentIndex + 1} / {validAds.length}
       </div>
     </div>
   );
 }
+
+

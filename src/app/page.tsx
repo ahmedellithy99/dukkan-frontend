@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMarketplaceStore } from '@/store/marketplace';
 import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
@@ -9,22 +9,21 @@ import { OffersSection } from '@/components/OffersSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockData } from '@/lib/api';
-import type { CategoryWithSubCategories } from '@/types/marketplace';
+import { categoriesApi, offersApi, adCarouselApi, getCategoryIcon } from '@/lib/api';
+import type { AdCarousel } from '@/types/marketplace';
 import Link from 'next/link';
 
 export default function MarketplacePage() {
   const {
-    featuredOffers,
-    setShops,
-    setFeaturedShops,
-    setProducts,
+    categories,
+    offers,
+    setCategories,
     setOffers,
-    setFeaturedOffers,
-    setIsLoading,
-    setError,
   } = useMarketplaceStore();
 
+  const [adCarousels, setAdCarousels] = useState<AdCarousel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const categoriesScrollRef = useRef<HTMLDivElement>(null);
 
   // Load data on mount
@@ -34,15 +33,17 @@ export default function MarketplacePage() {
       setError(null);
 
       try {
-        // Simulate API call with mock data
-        // In production, replace with: await shopsApi.getAll()
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Fetch data from API in parallel
+        const [categoriesResponse, offersResponse, adCarouselsResponse] = await Promise.all([
+          categoriesApi.getAll(),
+          offersApi.getAll(10), // Get 10 featured offers
+          adCarouselApi.getAll(),
+        ]);
 
-        setShops(mockData.shops);
-        setFeaturedShops(mockData.shops.filter(shop => shop.featured));
-        setProducts(mockData.products);
-        setOffers(mockData.offers);
-        setFeaturedOffers(mockData.offers.filter(offer => offer.featured));
+        // Update store with API data
+        setCategories(categoriesResponse.data);
+        setOffers(offersResponse.data);
+        setAdCarousels(adCarouselsResponse.data || []);
       } catch (err) {
         setError('Failed to load data. Please try again.');
         console.error('Error loading data:', err);
@@ -52,222 +53,13 @@ export default function MarketplacePage() {
     };
 
     loadData();
-  }, [setShops, setFeaturedShops, setProducts, setOffers, setFeaturedOffers, setIsLoading, setError]);
-
-  const categories: CategoryWithSubCategories[] = [
-    {
-      id: 'clothes',
-      name: 'Clothes',
-      icon: '👕',
-      subCategories: [
-        {
-          id: 'men',
-          name: 'Men',
-          icon: '👨',
-          subSubCategories: [
-            { id: 'sport', name: 'Sport' },
-            { id: 'casual', name: 'Casual' },
-            { id: 'classic', name: 'Classic' },
-            { id: 'formal', name: 'Formal' },
-          ],
-        },
-        {
-          id: 'women',
-          name: 'Women',
-          icon: '👩',
-          subSubCategories: [
-            { id: 'sport', name: 'Sport' },
-            { id: 'casual', name: 'Casual' },
-            { id: 'classic', name: 'Classic' },
-            { id: 'formal', name: 'Formal' },
-          ],
-        },
-        {
-          id: 'kids',
-          name: 'Kids',
-          icon: '👶',
-          subSubCategories: [
-            { id: 'boys', name: 'Boys' },
-            { id: 'girls', name: 'Girls' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'shoes',
-      name: 'Shoes',
-      icon: '👟',
-      subCategories: [
-        {
-          id: 'men',
-          name: 'Men',
-          icon: '👨',
-          subSubCategories: [
-            { id: 'sport', name: 'Sport' },
-            { id: 'casual', name: 'Casual' },
-            { id: 'formal', name: 'Formal' },
-          ],
-        },
-        {
-          id: 'women',
-          name: 'Women',
-          icon: '👩',
-          subSubCategories: [
-            { id: 'sport', name: 'Sport' },
-            { id: 'casual', name: 'Casual' },
-            { id: 'formal', name: 'Formal' },
-          ],
-        },
-        {
-          id: 'kids',
-          name: 'Kids',
-          icon: '👶',
-          subSubCategories: [
-            { id: 'boys', name: 'Boys' },
-            { id: 'girls', name: 'Girls' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'accessories',
-      name: 'Accessories',
-      icon: '⌚',
-      subCategories: [
-        {
-          id: 'men',
-          name: 'Men',
-          icon: '👨',
-          subSubCategories: [
-            { id: 'watches', name: 'Watches' },
-            { id: 'belts', name: 'Belts' },
-            { id: 'glasses', name: 'Glasses' },
-          ],
-        },
-        {
-          id: 'women',
-          name: 'Women',
-          icon: '👩',
-          subSubCategories: [
-            { id: 'watches', name: 'Watches' },
-            { id: 'jewelry', name: 'Jewelry' },
-            { id: 'bags', name: 'Bags' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'cosmetics',
-      name: 'Cosmetics',
-      icon: '💄',
-      subCategories: [
-        {
-          id: 'makeup',
-          name: 'Makeup',
-          icon: '💄',
-          subSubCategories: [
-            { id: 'face', name: 'Face' },
-            { id: 'eyes', name: 'Eyes' },
-            { id: 'lips', name: 'Lips' },
-          ],
-        },
-        {
-          id: 'skincare',
-          name: 'Skincare',
-          icon: '🧴',
-          subSubCategories: [
-            { id: 'face', name: 'Face' },
-            { id: 'body', name: 'Body' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'toys',
-      name: 'Toys',
-      icon: '🧸',
-      subCategories: [
-        {
-          id: 'educational',
-          name: 'Educational',
-          icon: '📚',
-          subSubCategories: [
-            { id: 'puzzles', name: 'Puzzles' },
-            { id: 'games', name: 'Games' },
-          ],
-        },
-        {
-          id: 'action',
-          name: 'Action Figures',
-          icon: '🦸',
-          subSubCategories: [
-            { id: 'superheroes', name: 'Superheroes' },
-            { id: 'collectibles', name: 'Collectibles' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'phones',
-      name: 'Phones',
-      icon: '📱',
-      subCategories: [
-        {
-          id: 'smartphones',
-          name: 'Smartphones',
-          icon: '📱',
-          subSubCategories: [
-            { id: 'apple', name: 'Apple' },
-            { id: 'samsung', name: 'Samsung' },
-            { id: 'xiaomi', name: 'Xiaomi' },
-          ],
-        },
-        {
-          id: 'accessories',
-          name: 'Accessories',
-          icon: '🔌',
-          subSubCategories: [
-            { id: 'cases', name: 'Cases' },
-            { id: 'chargers', name: 'Chargers' },
-            { id: 'headphones', name: 'Headphones' },
-          ],
-        },
-      ],
-    },
-    {
-      id: 'laptops',
-      name: 'Laptops',
-      icon: '💻',
-      subCategories: [
-        {
-          id: 'gaming',
-          name: 'Gaming',
-          icon: '🎮',
-          subSubCategories: [
-            { id: 'asus', name: 'Asus' },
-            { id: 'msi', name: 'MSI' },
-            { id: 'razer', name: 'Razer' },
-          ],
-        },
-        {
-          id: 'business',
-          name: 'Business',
-          icon: '💼',
-          subSubCategories: [
-            { id: 'dell', name: 'Dell' },
-            { id: 'hp', name: 'HP' },
-            { id: 'lenovo', name: 'Lenovo' },
-          ],
-        },
-      ],
-    },
-  ];
+  }, [setCategories, setOffers]);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <AdsCarousel />
+        <AdsCarousel ads={adCarousels} />
         <div className="space-y-12">
           {/* Hero Section */}
           <section className="bg-gradient-to-br from-muted to-muted/50 py-16 text-center">
@@ -291,69 +83,41 @@ export default function MarketplacePage() {
           </section>
 
           {/* Categories Section */}
-          <section className="container mx-auto px-4">
-            <h2 className="mb-6 text-2xl font-bold">Products by Category</h2>
-            
-            {/* Mobile: Slider with navigation buttons */}
-            <div className="md:hidden relative">
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div
-                ref={categoriesScrollRef}
-                className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {categories.map((category) => (
-                  <Link key={category.id} href={`/products?category=${category.id}`}>
-                    <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
-                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                        <span className="text-4xl">{category.icon}</span>
-                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                      </CardContent>
-                    </Card>
-                  </Link>
+          {isLoading ? (
+            <section className="container mx-auto px-4">
+              <h2 className="mb-6 text-2xl font-bold">Products by Category</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                {[...Array(7)].map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                      <div className="w-12 h-12 bg-muted rounded-full" />
+                      <div className="h-4 w-20 bg-muted rounded" />
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
-                onClick={() => {
-                  if (categoriesScrollRef.current) {
-                    categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                  }
-                }}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Desktop/Tablet: Grid layout when ≤ 8 elements, otherwise slider */}
-            {categories.length <= 8 ? (
-              <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
-                {categories.map((category) => (
-                  <Link key={category.id} href={`/products?category=${category.id}`}>
-                    <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md">
-                      <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                        <span className="text-4xl">{category.icon}</span>
-                        <h3 className="text-lg font-semibold text-center">{category.name}</h3>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="hidden md:relative">
+            </section>
+          ) : error ? (
+            <section className="container mx-auto px-4">
+              <Card className="border-destructive">
+                <CardContent className="p-8 text-center">
+                  <p className="text-destructive">{error}</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try Again
+                  </Button>
+                </CardContent>
+              </Card>
+            </section>
+          ) : categories.length > 0 ? (
+            <section className="container mx-auto px-4">
+              <h2 className="mb-6 text-2xl font-bold">Products by Category</h2>
+              
+              {/* Mobile: Slider with navigation buttons */}
+              <div className="md:hidden relative">
                 <Button
                   variant="outline"
                   size="icon"
@@ -373,9 +137,9 @@ export default function MarketplacePage() {
                 >
                   {categories.map((category) => (
                     <Link key={category.id} href={`/products?category=${category.id}`}>
-                      <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md flex-shrink-0 w-40">
+                      <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md shrink-0 w-40">
                         <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
-                          <span className="text-4xl">{category.icon}</span>
+                          <span className="text-4xl">{getCategoryIcon(category.name)}</span>
                           <h3 className="text-lg font-semibold text-center">{category.name}</h3>
                         </CardContent>
                       </Card>
@@ -395,11 +159,70 @@ export default function MarketplacePage() {
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-            )}
-          </section>
+
+              {/* Desktop/Tablet: Grid layout when ≤ 8 elements, otherwise slider */}
+              {categories.length <= 8 ? (
+                <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-7 gap-4">
+                  {categories.map((category) => (
+                    <Link key={category.id} href={`/products?category=${category.id}`}>
+                      <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md">
+                        <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                          <span className="text-4xl">{getCategoryIcon(category.name)}</span>
+                          <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="hidden md:relative">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                    onClick={() => {
+                      if (categoriesScrollRef.current) {
+                        categoriesScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div
+                    ref={categoriesScrollRef}
+                    className="flex gap-4 overflow-x-auto pb-4 px-12 scrollbar-hide scroll-smooth"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {categories.map((category) => (
+                      <Link key={category.id} href={`/products?category=${category.id}`}>
+                        <Card className="cursor-pointer border-2 transition-all hover:border-primary hover:shadow-md shrink-0 w-40">
+                          <CardContent className="flex flex-col items-center justify-center gap-3 py-6">
+                            <span className="text-4xl">{getCategoryIcon(category.name)}</span>
+                            <h3 className="text-lg font-semibold text-center">{category.name}</h3>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background shadow-lg"
+                    onClick={() => {
+                      if (categoriesScrollRef.current) {
+                        categoriesScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                      }
+                    }}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </section>
+          ) : null}
 
           {/* Offers Section */}
-          <OffersSection offers={featuredOffers} />
+          <OffersSection offers={offers} />
 
           {/* CTA Section */}
           <section className="bg-primary px-4 py-16 text-center text-primary-foreground">
@@ -436,3 +259,4 @@ export default function MarketplacePage() {
     </div>
   );
 }
+
