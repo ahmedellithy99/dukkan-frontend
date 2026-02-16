@@ -38,6 +38,7 @@ export default function ProductsPage() {
   
   // UI states
   const [showFilters, setShowFilters] = useState(false);
+  const [showShopSelector, setShowShopSelector] = useState(false);
 
   // Load categories on mount
   useEffect(() => {
@@ -308,29 +309,14 @@ export default function ProductsPage() {
                           <Filter className="h-4 w-4" />
                           Filter by Shop
                         </h3>
-                        <select
-                          className="w-full px-3 py-2.5 sm:py-2 border border-gray-200 dark:border-gray-700 rounded-md text-sm sm:text-base bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer max-h-[50vh]"
-                          style={{ 
-                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                            backgroundPosition: 'right 0.5rem center',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundSize: '1.5em 1.5em',
-                            paddingRight: '2.5rem'
-                          }}
-                          value=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              selectShop(e.target.value);
-                            }
-                          }}
+                        <Button
+                          variant="outline"
+                          className="w-full justify-between text-sm"
+                          onClick={() => setShowShopSelector(true)}
                         >
-                          <option value="">Select a shop...</option>
-                          {shops.map((shop) => (
-                            <option key={shop.id} value={shop.slug}>
-                              {shop.name}
-                            </option>
-                          ))}
-                        </select>
+                          <span>Select a shop...</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
                       </CardContent>
                     </Card>
                   )}
@@ -624,6 +610,53 @@ export default function ProductsPage() {
         </div>
       </main>
       <Footer />
+      
+      {/* Shop Selector Modal */}
+      {showShopSelector && (
+        <div 
+          className="fixed inset-0 z-[999] bg-black/50 flex items-end sm:items-center justify-center"
+          onClick={() => setShowShopSelector(false)}
+        >
+          {/* Mobile: Bottom Sheet, Desktop: Centered Modal */}
+          <div 
+            className="bg-white dark:bg-gray-900 w-full sm:max-w-lg sm:rounded-lg shadow-xl flex flex-col max-h-[80vh] sm:max-h-[70vh] rounded-t-2xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+              <h2 className="text-lg font-semibold">
+                Select a Shop
+              </h2>
+              <button
+                type="button"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors touch-manipulation"
+                onClick={() => setShowShopSelector(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Shop List */}
+            <div className="overflow-y-auto flex-1 p-4 sm:p-6">
+              <div className="space-y-2">
+                {shops.map((shop) => (
+                  <button
+                    key={shop.id}
+                    type="button"
+                    className="w-full text-left px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 transition-colors touch-manipulation"
+                    onClick={() => {
+                      selectShop(shop.slug);
+                      setShowShopSelector(false);
+                    }}
+                  >
+                    <span className="text-sm font-medium">{shop.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
