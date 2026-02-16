@@ -177,21 +177,84 @@ export const productsApi = {
   },
 
   /**
-   * Track WhatsApp click
+   * Track WhatsApp click (fire-and-forget)
    */
-  trackWhatsAppClick: async (productSlug: string) => {
-    return apiRequest(`/products/${productSlug}/track/whatsapp`, {
+  trackWhatsAppClick: (productSlug: string) => {
+    const url = `${getApiBaseUrl()}/products/${productSlug}/track/whatsapp`;
+    console.log('📊 Tracking WhatsApp click:', url);
+    
+    fetch(url, {
       method: 'POST',
-    });
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(getCitySlugFromHostname() && { 'X-City': getCitySlugFromHostname()! }),
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log('✅ WhatsApp click tracked successfully');
+        } else {
+          console.warn('⚠️ WhatsApp tracking failed:', response.status, response.statusText);
+        }
+      })
+      .catch(error => {
+        console.error('❌ WhatsApp tracking error:', error);
+      });
   },
 
   /**
-   * Track location click
+   * Track location click (fire-and-forget)
    */
-  trackLocationClick: async (productSlug: string) => {
-    return apiRequest(`/products/${productSlug}/track/location`, {
+  trackLocationClick: (productSlug: string) => {
+    const url = `${getApiBaseUrl()}/products/${productSlug}/track/location`;
+    console.log('📊 Tracking location click:', url);
+    
+    fetch(url, {
       method: 'POST',
-    });
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(getCitySlugFromHostname() && { 'X-City': getCitySlugFromHostname()! }),
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log('✅ Location click tracked successfully');
+        } else {
+          console.warn('⚠️ Location tracking failed:', response.status, response.statusText);
+        }
+      })
+      .catch(error => {
+        console.error('❌ Location tracking error:', error);
+      });
+  },
+
+  /**
+   * Track product view (fire-and-forget)
+   */
+  trackView: (productSlug: string) => {
+    const url = `${getApiBaseUrl()}/products/${productSlug}/track/view`;
+    console.log('📊 Tracking product view:', url);
+    
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...(getCitySlugFromHostname() && { 'X-City': getCitySlugFromHostname()! }),
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          console.log('✅ Product view tracked successfully');
+        } else {
+          console.warn('⚠️ View tracking failed:', response.status, response.statusText);
+        }
+      })
+      .catch(error => {
+        console.error('❌ View tracking error:', error);
+      });
   },
 };
 

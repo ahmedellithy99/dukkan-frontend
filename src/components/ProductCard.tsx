@@ -10,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, MapPin, Phone, X } from 'lucide-react';
-import { generateWhatsAppLink, formatPrice } from '@/lib/api';
+import { generateWhatsAppLink, formatPrice, productsApi } from '@/lib/api';
 
 interface ProductCardProps {
   product: Product;
@@ -61,15 +61,30 @@ export function ProductCard({ product }: ProductCardProps) {
   // Handlers
   const handleWhatsAppClick = () => {
     if (!product.shop?.whatsapp_number) return;
+    
+    // Track WhatsApp click (fire-and-forget)
+    productsApi.trackWhatsAppClick(product.slug);
+    
     const message = `Hi, I'm interested in ${product.name}`;
     window.open(generateWhatsAppLink(product.shop.whatsapp_number, message), '_blank');
   };
 
   const handleLocationClick = () => {
     if (!product.shop?.location) return;
+    
+    // Track location click (fire-and-forget)
+    productsApi.trackLocationClick(product.slug);
+    
     const { latitude, longitude } = product.shop.location;
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
     window.open(mapsUrl, '_blank');
+  };
+
+  const handleCardClick = () => {
+    // Track product view when modal opens (fire-and-forget)
+    productsApi.trackView(product.slug);
+    
+    setIsDialogOpen(true);
   };
 
   const handleImageScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -85,7 +100,7 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Card - Professional E-commerce Style */}
       <div 
         className="group cursor-pointer bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
-        onClick={() => setIsDialogOpen(true)}
+        onClick={handleCardClick}
       >
         {/* Image Container - Slider on Mobile, Hover on Desktop */}
         <div className="relative">
