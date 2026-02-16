@@ -84,58 +84,91 @@ export function ProductCard({ product }: ProductCardProps) {
     <>
       {/* Product Card - Professional E-commerce Style */}
       <div 
-        className="group cursor-pointer bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300 hover:shadow-lg"
+        className="group cursor-pointer bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-lg"
         onClick={() => setIsDialogOpen(true)}
       >
-        {/* Image Container with Horizontal Scroll */}
+        {/* Image Container - Slider on Mobile, Hover on Desktop */}
         <div className="relative">
-          <div 
-            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-3/4"
-            onScroll={handleImageScroll}
-          >
-            {cardImages.length > 0 ? (
-              cardImages.map((imageUrl, index) => (
-                <div 
-                  key={index}
-                  className="w-full shrink-0 snap-center relative bg-gray-50 dark:bg-gray-900"
-                >
-                  <img
-                    src={imageUrl}
-                    alt={`${product.name} - view ${index + 1}`}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
+          {/* Mobile: Horizontal Scroll Slider */}
+          <div className="lg:hidden">
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-3/4"
+              onScroll={handleImageScroll}
+            >
+              {cardImages.length > 0 ? (
+                cardImages.map((imageUrl, index) => (
+                  <div 
+                    key={index}
+                    className="w-full shrink-0 snap-center relative bg-gray-50 dark:bg-gray-900"
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`${product.name} - view ${index + 1}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="w-full shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-5xl text-gray-300 dark:text-gray-600">
+                  📦
                 </div>
-              ))
-            ) : (
-              <div className="w-full shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-5xl text-gray-300 dark:text-gray-600">
-                📦
+              )}
+            </div>
+
+            {/* Dots Indicator - Mobile Only */}
+            {cardImages.length > 1 && (
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+                {cardImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex 
+                        ? 'w-6 bg-white' 
+                        : 'w-1.5 bg-white/50'
+                    }`}
+                  />
+                ))}
               </div>
             )}
           </div>
 
+          {/* Desktop: Hover Effect */}
+          <div className="hidden lg:block aspect-3/4 bg-gray-50 dark:bg-gray-900 overflow-hidden relative">
+            {/* Main Image */}
+            {mainImageUrl && (
+              <img
+                src={mainImageUrl}
+                alt={product.name}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover transition-all duration-700 ease-in-out group-hover:opacity-0 group-hover:scale-105"
+              />
+            )}
+            
+            {/* Secondary Image - Shows on Hover (Desktop Only) */}
+            {secondaryImageUrl && (
+              <img
+                src={secondaryImageUrl}
+                alt={`${product.name} - alternate view`}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover opacity-0 scale-105 transition-all duration-700 ease-in-out group-hover:opacity-100 group-hover:scale-100"
+              />
+            )}
+            
+            {/* Fallback if no images */}
+            {!mainImageUrl && !secondaryImageUrl && (
+              <div className="absolute inset-0 flex items-center justify-center text-5xl text-gray-300 dark:text-gray-600">
+                📦
+              </div>
+            )}
+          </div>
+          
           {/* Discount Badge */}
           {product.has_discount && product.discount_value && (
             <div className="absolute top-2 left-2 z-10">
               <Badge className="bg-red-500 text-white font-semibold px-2 py-1">
                 -{product.discount_value}{product.discount_type === 'percent' ? '%' : ' EGP'}
               </Badge>
-            </div>
-          )}
-
-          {/* Dots Indicator */}
-          {cardImages.length > 1 && (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
-              {cardImages.map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    index === currentImageIndex 
-                      ? 'w-6 bg-white' 
-                      : 'w-1.5 bg-white/50'
-                  }`}
-                />
-              ))}
             </div>
           )}
         </div>
@@ -191,47 +224,78 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Scrollable Content */}
           <div className="overflow-y-auto max-h-[95vh]">
-            {/* Image Carousel */}
+            {/* Image Carousel - Slider on Mobile, Hover on Desktop */}
             <div className="relative">
-              <div 
-                className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-3/4"
-                onScroll={handleImageScroll}
-              >
-                {allImages.length > 0 ? (
-                  allImages.map((imageUrl, index) => (
-                    <div 
-                      key={index}
-                      className="w-full shrink-0 snap-center relative bg-gray-50 dark:bg-gray-900"
-                    >
-                      <img
-                        src={imageUrl}
-                        alt={`${product.name} - view ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
+              {/* Mobile: Horizontal Scroll Slider */}
+              <div className="lg:hidden">
+                <div 
+                  className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-square"
+                  onScroll={handleImageScroll}
+                >
+                  {allImages.length > 0 ? (
+                    allImages.map((imageUrl, index) => (
+                      <div 
+                        key={index}
+                        className="w-full shrink-0 snap-center relative bg-gray-50 dark:bg-gray-900"
+                      >
+                        <img
+                          src={imageUrl}
+                          alt={`${product.name} - view ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="w-full shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-6xl text-gray-300 dark:text-gray-600">
+                      📦
                     </div>
-                  ))
-                ) : (
-                  <div className="w-full shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-6xl text-gray-300 dark:text-gray-600">
-                    📦
+                  )}
+                </div>
+
+                {/* Dots Indicator - Mobile Only */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
+                    {allImages.map((_, index) => (
+                      <div
+                        key={index}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          index === currentImageIndex 
+                            ? 'w-6 bg-white' 
+                            : 'w-1.5 bg-white/50'
+                        }`}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
 
-              {/* Dots Indicator */}
-              {allImages.length > 1 && (
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 z-10">
-                  {allImages.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`h-1.5 rounded-full transition-all duration-300 ${
-                        index === currentImageIndex 
-                          ? 'w-6 bg-white' 
-                          : 'w-1.5 bg-white/50'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
+              {/* Desktop: Hover Effect */}
+              <div className="hidden lg:block aspect-video bg-gray-50 dark:bg-gray-900 overflow-hidden relative group">
+                {/* Main Image */}
+                {mainImageUrl && (
+                  <img
+                    src={mainImageUrl}
+                    alt={product.name}
+                    className="absolute inset-0 h-full w-full object-contain transition-all duration-700 ease-in-out group-hover:opacity-0 group-hover:scale-105"
+                  />
+                )}
+                
+                {/* Secondary Image - Shows on Hover (Desktop Only) */}
+                {secondaryImageUrl && (
+                  <img
+                    src={secondaryImageUrl}
+                    alt={`${product.name} - alternate view`}
+                    className="absolute inset-0 h-full w-full object-contain opacity-0 scale-105 transition-all duration-700 ease-in-out group-hover:opacity-100 group-hover:scale-100"
+                  />
+                )}
+                
+                {/* Fallback if no images */}
+                {!mainImageUrl && !secondaryImageUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center text-6xl text-gray-300 dark:text-gray-600">
+                    📦
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Product Details */}
