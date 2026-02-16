@@ -11,9 +11,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Package, X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, X, Filter, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { productsApi, categoriesApi, shopsApi, getCategoryIcon } from '@/lib/api';
-import type { Product, Category, Shop, ProductFilters } from '@/types/marketplace';
+import type { Product, Category, Shop, ProductFilters, PaginationMeta } from '@/types/marketplace';
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
@@ -22,11 +22,13 @@ export default function ProductsPage() {
   const categorySlug = searchParams.get('category');
   const subcategorySlug = searchParams.get('subcategory');
   const shopSlug = searchParams.get('shop');
+  const currentPage = parseInt(searchParams.get('page') || '1', 10);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [shops, setShops] = useState<Shop[]>([]);
   const [shopDetails, setShopDetails] = useState<{ id: number; name: string } | null>(null);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -99,7 +101,10 @@ export default function ProductsPage() {
 
       try {
         // Build filters object using ProductFilters type
-        const filters: ProductFilters = {};
+        const filters: ProductFilters = {
+          page: currentPage,
+          per_page: 24
+        };
         
         if (search) {
           filters.search = search;
@@ -145,6 +150,7 @@ export default function ProductsPage() {
 
         const response = await productsApi.getAll(filters);
         setProducts(response.data);
+        setPagination(response.meta?.pagination || null);
       } catch (err) {
         setError('Failed to load products. Please try again.');
         console.error('Error loading products:', err);
@@ -159,7 +165,7 @@ export default function ProductsPage() {
         (!shopSlug || shopDetails)) {
       loadProducts();
     }
-  }, [search, categorySlug, subcategorySlug, shopSlug, shopDetails, categories, minPrice, maxPrice, onDiscount, sortBy]);
+  }, [search, categorySlug, subcategorySlug, shopSlug, shopDetails, categories, minPrice, maxPrice, onDiscount, sortBy, currentPage]);
 
   // Get selected category and subcategory
   const selectedCategory = Array.isArray(categories) ? categories.find(c => c.slug === categorySlug) : undefined;
@@ -176,6 +182,9 @@ export default function ProductsPage() {
 
   // Get description for header
   const getDescription = () => {
+    if (pagination) {
+      return `Showing ${pagination.from || 0}-${pagination.to || 0} of ${pagination.total} product${pagination.total !== 1 ? 's' : ''}`;
+    }
     if (search) {
       return `Found ${products.length} product${products.length !== 1 ? 's' : ''} matching your search`;
     }
@@ -241,6 +250,81 @@ export default function ProductsPage() {
     setMaxPrice('');
     setOnDiscount(false);
     setSortBy('');
+  };
+
+  const goToPage = (page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', page.toString());
+    router.push(`/products?${params.toString()}`);
+  };
+
+  const renderPagination = () => {
+    if (!pagination || pagination.last_page <= 1) return null;
+
+    const { current_page, last_page } = pagination;
+    const pages: (number | string)[] = [];
+
+    // Always show first page
+    pages.push(1);
+
+    // Show pages around current page
+    if (current_page > 3) {
+      pages.push('...');
+    }
+
+    for (let i = Math.max(2, current_page - 1); i <= Math.min(last_page - 1, current_page + 1); i++) {
+      pages.push(i);
+    }
+
+    // Show last page
+    if (current_page < last_page - 2) {
+      pages.push('...');
+    }
+    if (last_page > 1) {
+      pages.push(last_page);
+    }
+
+    return (
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => goToPage(current_page - 1)}
+          disabled={current_page === 1}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Previous</span>
+        </Button>
+
+        <div className="flex gap-1">
+          {pages.map((page, index) => (
+            page === '...' ? (
+              <span key={`ellipsis-${index}`} className="px-3 py-2 text-sm">...</span>
+            ) : (
+              <Button
+                key={page}
+                variant={current_page === page ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => goToPage(page as number)}
+                className="min-w-[2.5rem]"
+              >
+                {page}
+              </Button>
+            )
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => goToPage(current_page + 1)}
+          disabled={current_page === last_page}
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    );
   };
 
   const hasActiveFilters = minPrice || maxPrice || onDiscount || sortBy;
@@ -599,11 +683,16 @@ export default function ProductsPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {Array.isArray(products) && products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {Array.isArray(products) && products.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  
+                  {/* Pagination */}
+                  {renderPagination()}
+                </>
               )}
             </div>
           </div>
