@@ -18,6 +18,13 @@ import type {
   ProductStats,
   ProductFilters,
   ShopFilters,
+  VendorAuthResponse,
+  DashboardStats,
+  RecentActivityResponse,
+  ProductFormData,
+  ShopFormData,
+  MediaResource,
+  Location,
 } from '@/types/marketplace';
 
 /**
@@ -100,11 +107,15 @@ async function apiRequest<T>(
   // Get city slug for X-City header
   const citySlug = getCitySlugFromHostname();
 
+  // Check if body is FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+
   try {
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        // Don't set Content-Type for FormData - browser will set it with boundary
+        ...(!isFormData && { 'Content-Type': 'application/json' }),
         'Accept': 'application/json',
         ...(citySlug && { 'X-City': citySlug }), // Add X-City header if city slug exists
         ...options.headers,
@@ -438,6 +449,338 @@ export const getCategoryIcon = (categoryName: string): string => {
 
   // Default icon
   return '📦';
+};
+
+/**
+ * Vendor API Client
+ * Protected endpoints for shop owners to manage their shops and products
+ */
+export const vendorApi = {
+  // Authentication
+  register: async (data: {
+    name: string;
+    email: string;
+    password: string;
+    password_confirmation: string;
+    phone_number: string;
+  }) => {
+    return apiRequest<VendorAuthResponse>('/vendor/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  login: async (email: string, password: string) => {
+    return apiRequest<VendorAuthResponse>('/vendor/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  logout: async (token: string) => {
+    return apiRequest('/vendor/logout', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  me: async (token: string) => {
+    return apiRequest('/vendor/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Dashboard
+  getDashboardStats: async (token: string) => {
+    return apiRequest<DashboardStats>('/vendor/dashboard/stats', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  getRecentActivity: async (token: string, days: number = 7) => {
+    return apiRequest<RecentActivityResponse>(
+      `/vendor/dashboard/recent-activity?days=${days}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  },
+
+  // Shops
+  getMyShops: async (token: string, filters: { is_active?: boolean } = {}) => {
+    const queryString = buildQueryString(filters);
+    return apiRequest<Shop[]>(`/vendor/my-shops${queryString}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  createShop: async (token: string, data: ShopFormData) => {
+    return apiRequest<Shop>('/vendor/my-shops', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateShop: async (
+    token: string,
+    shopId: number,
+    data: Partial<ShopFormData>
+  ) => {
+    return apiRequest<Shop>(`/vendor/my-shops/${shopId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteShop: async (token: string, shopId: number) => {
+    return apiRequest(`/vendor/my-shops/${shopId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  restoreShop: async (token: string, shopId: number) => {
+    return apiRequest(`/vendor/my-shops/${shopId}/restore`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Shop Logo
+  uploadShopLogo: async (token: string, shopId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('logo', file);
+
+    return apiRequest<MediaResource>(`/vendor/my-shops/${shopId}/logo`, {
+      method: 'POST',
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type for FormData - browser will set it with boundary
+      },
+      body: formData,
+    });
+  },
+
+  deleteShopLogo: async (token: string, shopId: number) => {
+    return apiRequest(`/vendor/my-shops/${shopId}/logo`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Products
+  getShopProducts: async (
+    token: string,
+    shopId: number,
+    filters: ProductFilters = {}
+  ) => {
+    const queryString = buildQueryString(filters);
+    return apiRequest<Product[]>(
+      `/vendor/my-shop/${shopId}/products${queryString}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  getProduct: async (token: string, shopId: number, productId: number) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  createProduct: async (
+    token: string,
+    shopId: number,
+    data: ProductFormData
+  ) => {
+    return apiRequest<Product>(`/vendor/my-shop/${shopId}/products`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateProduct: async (
+    token: string,
+    shopId: number,
+    productId: number,
+    data: Partial<ProductFormData>
+  ) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(data),
+      }
+    );
+  },
+
+  deleteProduct: async (token: string, shopId: number, productId: number) => {
+    return apiRequest(`/vendor/my-shop/${shopId}/products/${productId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  toggleProductStatus: async (
+    token: string,
+    shopId: number,
+    productId: number
+  ) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}/toggle-status`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  updateStock: async (
+    token: string,
+    shopId: number,
+    productId: number,
+    stock_quantity: number
+  ) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}/stock`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ stock_quantity }),
+      }
+    );
+  },
+
+  applyDiscount: async (
+    token: string,
+    shopId: number,
+    productId: number,
+    discount_type: 'percent' | 'amount',
+    discount_value: number
+  ) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}/apply-discount`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ discount_type, discount_value }),
+      }
+    );
+  },
+
+  removeDiscount: async (token: string, shopId: number, productId: number) => {
+    return apiRequest<Product>(
+      `/vendor/my-shop/${shopId}/products/${productId}/remove-discount`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  // Product Images
+  uploadMainImage: async (
+    token: string,
+    shopId: number,
+    productId: number,
+    file: File
+  ) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    return apiRequest<MediaResource>(
+      `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
+      {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser will set it with boundary
+        },
+        body: formData,
+      }
+    );
+  },
+
+  uploadSecondaryImage: async (
+    token: string,
+    shopId: number,
+    productId: number,
+    file: File
+  ) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    return apiRequest<MediaResource>(
+      `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
+      {
+        method: 'POST',
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type for FormData - browser will set it with boundary
+        },
+        body: formData,
+      }
+    );
+  },
+
+  deleteMainImage: async (token: string, shopId: number, productId: number) => {
+    return apiRequest(
+      `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  deleteSecondaryImage: async (
+    token: string,
+    shopId: number,
+    productId: number
+  ) => {
+    return apiRequest(
+      `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
+      {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+  },
+
+  // Product Analytics
+  getProductStats: async (token: string, productId: number) => {
+    return apiRequest<ProductStats>(`/vendor/products/${productId}/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  // Location
+  updateLocation: async (
+    token: string,
+    locationId: number,
+    data: {
+      area: string;
+      street?: string;
+      building_number?: string;
+      floor_number?: string;
+      apartment_number?: string;
+      latitude: number;
+      longitude: number;
+      additional_directions?: string;
+    }
+  ) => {
+    return apiRequest<Location>(`/vendor/locations/${locationId}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 /**
