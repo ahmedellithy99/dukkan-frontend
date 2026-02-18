@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -12,68 +11,85 @@ import {
   MessageCircle, 
   MapPin,
   Plus,
-  Settings
+  Settings,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { vendorApi } from '@/lib/api';
+import type { DashboardStats, Activity } from '@/types/marketplace';
 
 export default function VendorDashboard() {
-  const router = useRouter();
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    activeProducts: 0,
-    totalViews: 0,
-    whatsappClicks: 0,
-    locationClicks: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Fetch vendor stats from API
-    // For now, using mock data
-    setTimeout(() => {
-      setStats({
-        totalProducts: 24,
-        activeProducts: 20,
-        totalViews: 1250,
-        whatsappClicks: 340,
-        locationClicks: 180,
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get token from localStorage
+        const token = localStorage.getItem('vendor_token');
+        if (!token) {
+          setError('No authentication token found. Please login.');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch dashboard stats and recent activity
+        const [statsResponse, activityResponse] = await Promise.all([
+          vendorApi.getDashboardStats(token),
+          vendorApi.getRecentActivity(token, 7)
+        ]);
+
+        setStats(statsResponse.data);
+        setActivities(activityResponse.data.activities);
+      } catch (err: any) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
-  const StatCard = ({ 
-    title, 
-    value, 
-    icon: Icon, 
-    trend, 
-    color = 'text-primary' 
-  }: { 
-    title: string; 
-    value: string | number; 
-    icon: any; 
-    trend?: string;
-    color?: string;
-  }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">{title}</p>
-            <p className="text-3xl font-bold">{value}</p>
-            {trend && (
-              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                {trend}
-              </p>
-            )}
-          </div>
-          <div className={`p-3 rounded-full bg-muted ${color}`}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const getActivityIcon = (type: Activity['activity_type']) => {
+    switch (type) {
+      case 'view':
+        return { Icon: Eye, color: 'bg-green-100 dark:bg-green-900/20 text-green-600' };
+      case 'whatsapp_click':
+        return { Icon: MessageCircle, color: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600' };
+      case 'location_click':
+        return { Icon: MapPin, color: 'bg-purple-100 dark:bg-purple-900/20 text-purple-600' };
+      case 'favorite':
+        return { Icon: TrendingUp, color: 'bg-orange-100 dark:bg-orange-900/20 text-orange-600' };
+      default:
+        return { Icon: Eye, color: 'bg-gray-100 dark:bg-gray-900/20 text-gray-600' };
+    }
+  };
+
+  const getActivityText = (activity: Activity) => {
+    switch (activity.activity_type) {
+      case 'view':
+        return `Product "${activity.product.name}" viewed`;
+      case 'whatsapp_click':
+        return `WhatsApp contact for "${activity.product.name}"`;
+      case 'location_click':
+        return `Location viewed for "${activity.product.name}"`;
+      case 'favorite':
+        return `Product "${activity.product.name}" favorited`;
+      default:
+        return `Activity on "${activity.product.name}"`;
+    }
+  };
+
+  const handleRetry = () => {
+    window.location.reload();
+  };
 
   if (loading) {
     return (
@@ -82,6 +98,44 @@ export default function VendorDashboard() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Error Loading Dashboard</h3>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleRetry} className="flex-1">
+                Retry
+              </Button>
+              <Link href="/vendor/login" className="flex-1">
+                <Button variant="outline" className="w-full">
+                  Login
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">No data available</p>
       </div>
     );
   }
@@ -119,46 +173,104 @@ export default function VendorDashboard() {
         <div className="space-y-8">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard
-              title="Total Products"
-              value={stats.totalProducts}
-              icon={Package}
-              color="text-blue-600"
-            />
-            <StatCard
-              title="Active Products"
-              value={stats.activeProducts}
-              icon={ShoppingBag}
-              color="text-green-600"
-            />
-            <StatCard
-              title="Total Views"
-              value={stats.totalViews.toLocaleString()}
-              icon={Eye}
-              trend="+12% this week"
-              color="text-purple-600"
-            />
-            <StatCard
-              title="WhatsApp Clicks"
-              value={stats.whatsappClicks}
-              icon={MessageCircle}
-              trend="+8% this week"
-              color="text-green-600"
-            />
-            <StatCard
-              title="Location Clicks"
-              value={stats.locationClicks}
-              icon={MapPin}
-              trend="+5% this week"
-              color="text-blue-600"
-            />
-            <StatCard
-              title="Engagement Rate"
-              value="41.6%"
-              icon={TrendingUp}
-              trend="+3.2% this week"
-              color="text-orange-600"
-            />
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Products</p>
+                    <p className="text-3xl font-bold">{stats.total_products}</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-blue-600">
+                    <Package className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Active Products</p>
+                    <p className="text-3xl font-bold">{stats.active_products}</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-green-600">
+                    <ShoppingBag className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Total Views</p>
+                    <p className="text-3xl font-bold">{stats.total_views.toLocaleString()}</p>
+                    {stats.trends.views_change !== 0 && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        +{stats.trends.views_change}% this week
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-purple-600">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">WhatsApp Clicks</p>
+                    <p className="text-3xl font-bold">{stats.total_whatsapp_clicks}</p>
+                    {stats.trends.whatsapp_change !== 0 && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        +{stats.trends.whatsapp_change}% this week
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-green-600">
+                    <MessageCircle className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Location Clicks</p>
+                    <p className="text-3xl font-bold">{stats.total_location_clicks}</p>
+                    {stats.trends.location_change !== 0 && (
+                      <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                        +{stats.trends.location_change}% this week
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-blue-600">
+                    <MapPin className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Engagement Rate</p>
+                    <p className="text-3xl font-bold">{stats.engagement_rate.toFixed(1)}%</p>
+                  </div>
+                  <div className="p-3 rounded-full bg-muted text-orange-600">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Quick Actions */}
@@ -196,35 +308,29 @@ export default function VendorDashboard() {
               <CardTitle>Recent Activity</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                  <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-full">
-                    <Eye className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Product "Samsung Galaxy S21" viewed</p>
-                    <p className="text-sm text-muted-foreground">2 minutes ago</p>
-                  </div>
+              {activities.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Eye className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No recent activity</p>
                 </div>
-                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                    <MessageCircle className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">WhatsApp contact for "iPhone 13 Pro"</p>
-                    <p className="text-sm text-muted-foreground">15 minutes ago</p>
-                  </div>
+              ) : (
+                <div className="space-y-4">
+                  {activities.map((activity) => {
+                    const { Icon, color } = getActivityIcon(activity.activity_type);
+                    return (
+                      <div key={activity.id} className="flex items-center gap-4 p-4 bg-muted rounded-lg">
+                        <div className={`p-2 rounded-full ${color}`}>
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{getActivityText(activity)}</p>
+                          <p className="text-sm text-muted-foreground">{activity.created_at_human}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full">
-                    <MapPin className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Location viewed for your shop</p>
-                    <p className="text-sm text-muted-foreground">1 hour ago</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
