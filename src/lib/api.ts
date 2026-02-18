@@ -532,7 +532,7 @@ export const vendorApi = {
   },
 
   me: async (token: string) => {
-    return vendorApiRequest('/vendor/me', {
+    return vendorApiRequest<VendorAuthResponse['user']>('/vendor/me', {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
