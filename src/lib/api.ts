@@ -131,7 +131,54 @@ async function apiRequest<T>(
 
     return data as ApiResponse<T>;
   } catch (error) {
-    console.error('API Request failed:', error);
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Request failed:', error);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Vendor API request wrapper (without city slug subdomain)
+ * Vendor endpoints should always use localhost:8000 without city subdomain
+ */
+async function vendorApiRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  // Always use localhost:8000 for vendor endpoints (no city slug)
+  const baseUrl = 'http://localhost:8000/api/v1';
+  const url = `${baseUrl}${endpoint}`;
+
+  // Check if body is FormData (for file uploads)
+  const isFormData = options.body instanceof FormData;
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        // Don't set Content-Type for FormData - browser will set it with boundary
+        ...(!isFormData && { 'Content-Type': 'application/json' }),
+        'Accept': 'application/json',
+        // No X-City header for vendor endpoints
+        ...options.headers,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorData = data as ApiErrorResponse;
+      throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+    }
+
+    return data as ApiResponse<T>;
+  } catch (error) {
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Vendor API Request failed:', error);
+    }
     throw error;
   }
 }
@@ -464,41 +511,41 @@ export const vendorApi = {
     password_confirmation: string;
     phone_number: string;
   }) => {
-    return apiRequest<VendorAuthResponse>('/vendor/register', {
+    return vendorApiRequest<VendorAuthResponse>('/vendor/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
   login: async (email: string, password: string) => {
-    return apiRequest<VendorAuthResponse>('/vendor/login', {
+    return vendorApiRequest<VendorAuthResponse>('/vendor/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   },
 
   logout: async (token: string) => {
-    return apiRequest('/vendor/logout', {
+    return vendorApiRequest('/vendor/logout', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   me: async (token: string) => {
-    return apiRequest('/vendor/me', {
+    return vendorApiRequest('/vendor/me', {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   // Dashboard
   getDashboardStats: async (token: string) => {
-    return apiRequest<DashboardStats>('/vendor/dashboard/stats', {
+    return vendorApiRequest<DashboardStats>('/vendor/dashboard/stats', {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   getRecentActivity: async (token: string, days: number = 7) => {
-    return apiRequest<RecentActivityResponse>(
+    return vendorApiRequest<RecentActivityResponse>(
       `/vendor/dashboard/recent-activity?days=${days}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -507,13 +554,13 @@ export const vendorApi = {
   // Shops
   getMyShops: async (token: string, filters: { is_active?: boolean } = {}) => {
     const queryString = buildQueryString(filters);
-    return apiRequest<Shop[]>(`/vendor/my-shops${queryString}`, {
+    return vendorApiRequest<Shop[]>(`/vendor/my-shops${queryString}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   createShop: async (token: string, data: ShopFormData) => {
-    return apiRequest<Shop>('/vendor/my-shops', {
+    return vendorApiRequest<Shop>('/vendor/my-shops', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
@@ -525,7 +572,7 @@ export const vendorApi = {
     shopId: number,
     data: Partial<ShopFormData>
   ) => {
-    return apiRequest<Shop>(`/vendor/my-shops/${shopId}`, {
+    return vendorApiRequest<Shop>(`/vendor/my-shops/${shopId}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
@@ -533,14 +580,14 @@ export const vendorApi = {
   },
 
   deleteShop: async (token: string, shopId: number) => {
-    return apiRequest(`/vendor/my-shops/${shopId}`, {
+    return vendorApiRequest(`/vendor/my-shops/${shopId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
   },
 
   restoreShop: async (token: string, shopId: number) => {
-    return apiRequest(`/vendor/my-shops/${shopId}/restore`, {
+    return vendorApiRequest(`/vendor/my-shops/${shopId}/restore`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -551,7 +598,7 @@ export const vendorApi = {
     const formData = new FormData();
     formData.append('logo', file);
 
-    return apiRequest<MediaResource>(`/vendor/my-shops/${shopId}/logo`, {
+    return vendorApiRequest<MediaResource>(`/vendor/my-shops/${shopId}/logo`, {
       method: 'POST',
       headers: { 
         Authorization: `Bearer ${token}`,
@@ -562,7 +609,7 @@ export const vendorApi = {
   },
 
   deleteShopLogo: async (token: string, shopId: number) => {
-    return apiRequest(`/vendor/my-shops/${shopId}/logo`, {
+    return vendorApiRequest(`/vendor/my-shops/${shopId}/logo`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -575,7 +622,7 @@ export const vendorApi = {
     filters: ProductFilters = {}
   ) => {
     const queryString = buildQueryString(filters);
-    return apiRequest<Product[]>(
+    return vendorApiRequest<Product[]>(
       `/vendor/my-shop/${shopId}/products${queryString}`,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -584,7 +631,7 @@ export const vendorApi = {
   },
 
   getProduct: async (token: string, shopId: number, productId: number) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -597,7 +644,7 @@ export const vendorApi = {
     shopId: number,
     data: ProductFormData
   ) => {
-    return apiRequest<Product>(`/vendor/my-shop/${shopId}/products`, {
+    return vendorApiRequest<Product>(`/vendor/my-shop/${shopId}/products`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
@@ -610,7 +657,7 @@ export const vendorApi = {
     productId: number,
     data: Partial<ProductFormData>
   ) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}`,
       {
         method: 'PUT',
@@ -621,7 +668,7 @@ export const vendorApi = {
   },
 
   deleteProduct: async (token: string, shopId: number, productId: number) => {
-    return apiRequest(`/vendor/my-shop/${shopId}/products/${productId}`, {
+    return vendorApiRequest(`/vendor/my-shop/${shopId}/products/${productId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -632,7 +679,7 @@ export const vendorApi = {
     shopId: number,
     productId: number
   ) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}/toggle-status`,
       {
         method: 'PUT',
@@ -647,7 +694,7 @@ export const vendorApi = {
     productId: number,
     stock_quantity: number
   ) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}/stock`,
       {
         method: 'PUT',
@@ -664,7 +711,7 @@ export const vendorApi = {
     discount_type: 'percent' | 'amount',
     discount_value: number
   ) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}/apply-discount`,
       {
         method: 'PUT',
@@ -675,7 +722,7 @@ export const vendorApi = {
   },
 
   removeDiscount: async (token: string, shopId: number, productId: number) => {
-    return apiRequest<Product>(
+    return vendorApiRequest<Product>(
       `/vendor/my-shop/${shopId}/products/${productId}/remove-discount`,
       {
         method: 'PUT',
@@ -694,7 +741,7 @@ export const vendorApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    return apiRequest<MediaResource>(
+    return vendorApiRequest<MediaResource>(
       `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
       {
         method: 'POST',
@@ -716,7 +763,7 @@ export const vendorApi = {
     const formData = new FormData();
     formData.append('image', file);
 
-    return apiRequest<MediaResource>(
+    return vendorApiRequest<MediaResource>(
       `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
       {
         method: 'POST',
@@ -730,7 +777,7 @@ export const vendorApi = {
   },
 
   deleteMainImage: async (token: string, shopId: number, productId: number) => {
-    return apiRequest(
+    return vendorApiRequest(
       `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
       {
         method: 'DELETE',
@@ -744,7 +791,7 @@ export const vendorApi = {
     shopId: number,
     productId: number
   ) => {
-    return apiRequest(
+    return vendorApiRequest(
       `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
       {
         method: 'DELETE',
@@ -755,7 +802,7 @@ export const vendorApi = {
 
   // Product Analytics
   getProductStats: async (token: string, productId: number) => {
-    return apiRequest<ProductStats>(`/vendor/products/${productId}/stats`, {
+    return vendorApiRequest<ProductStats>(`/vendor/products/${productId}/stats`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
@@ -775,7 +822,7 @@ export const vendorApi = {
       additional_directions?: string;
     }
   ) => {
-    return apiRequest<Location>(`/vendor/locations/${locationId}`, {
+    return vendorApiRequest<Location>(`/vendor/locations/${locationId}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
