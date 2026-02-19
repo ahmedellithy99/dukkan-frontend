@@ -618,21 +618,21 @@ export const vendorApi = {
   // Products
   getShopProducts: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     filters: ProductFilters = {}
   ) => {
     const queryString = buildQueryString(filters);
     return vendorApiRequest<Product[]>(
-      `/vendor/my-shop/${shopId}/products${queryString}`,
+      `/vendor/my-shop/${shopSlug}/products${queryString}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
   },
 
-  getProduct: async (token: string, shopId: number, productId: number) => {
+  getProduct: async (token: string, shopSlug: string, productId: number) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -641,10 +641,10 @@ export const vendorApi = {
 
   createProduct: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     data: ProductFormData
   ) => {
-    return vendorApiRequest<Product>(`/vendor/my-shop/${shopId}/products`, {
+    return vendorApiRequest<Product>(`/vendor/my-shop/${shopSlug}/products`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(data),
@@ -653,12 +653,12 @@ export const vendorApi = {
 
   updateProduct: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number,
     data: Partial<ProductFormData>
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -667,8 +667,8 @@ export const vendorApi = {
     );
   },
 
-  deleteProduct: async (token: string, shopId: number, productId: number) => {
-    return vendorApiRequest(`/vendor/my-shop/${shopId}/products/${productId}`, {
+  deleteProduct: async (token: string, shopSlug: string, productId: number) => {
+    return vendorApiRequest(`/vendor/my-shop/${shopSlug}/products/${productId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -676,11 +676,11 @@ export const vendorApi = {
 
   toggleProductStatus: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}/toggle-status`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/toggle-status`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -690,12 +690,12 @@ export const vendorApi = {
 
   updateStock: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number,
     stock_quantity: number
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}/stock`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/stock`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -706,13 +706,13 @@ export const vendorApi = {
 
   applyDiscount: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number,
     discount_type: 'percent' | 'amount',
     discount_value: number
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}/apply-discount`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/apply-discount`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -721,9 +721,9 @@ export const vendorApi = {
     );
   },
 
-  removeDiscount: async (token: string, shopId: number, productId: number) => {
+  removeDiscount: async (token: string, shopSlug: string, productId: number) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopId}/products/${productId}/remove-discount`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/remove-discount`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -734,7 +734,7 @@ export const vendorApi = {
   // Product Images
   uploadMainImage: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number,
     file: File
   ) => {
@@ -742,7 +742,7 @@ export const vendorApi = {
     formData.append('image', file);
 
     return vendorApiRequest<MediaResource>(
-      `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/images/main`,
       {
         method: 'POST',
         headers: { 
@@ -756,7 +756,7 @@ export const vendorApi = {
 
   uploadSecondaryImage: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number,
     file: File
   ) => {
@@ -764,7 +764,7 @@ export const vendorApi = {
     formData.append('image', file);
 
     return vendorApiRequest<MediaResource>(
-      `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/images/secondary`,
       {
         method: 'POST',
         headers: { 
@@ -776,9 +776,9 @@ export const vendorApi = {
     );
   },
 
-  deleteMainImage: async (token: string, shopId: number, productId: number) => {
+  deleteMainImage: async (token: string, shopSlug: string, productId: number) => {
     return vendorApiRequest(
-      `/vendor/my-shop/${shopId}/products/${productId}/images/main`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/images/main`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -788,11 +788,11 @@ export const vendorApi = {
 
   deleteSecondaryImage: async (
     token: string,
-    shopId: number,
+    shopSlug: string,
     productId: number
   ) => {
     return vendorApiRequest(
-      `/vendor/my-shop/${shopId}/products/${productId}/images/secondary`,
+      `/vendor/my-shop/${shopSlug}/products/${productId}/images/secondary`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },

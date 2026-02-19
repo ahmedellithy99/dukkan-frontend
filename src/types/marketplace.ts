@@ -208,6 +208,7 @@ export interface ProductFilters {
   max_price?: number;
   in_stock?: boolean;
   on_discount?: boolean;
+  is_active?: boolean;
   attributes?: Record<string, number[]>;
   city_id?: number;
   area?: string;
