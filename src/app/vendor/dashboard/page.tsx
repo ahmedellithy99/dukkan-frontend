@@ -17,6 +17,7 @@ import {
 import Link from 'next/link';
 import { vendorApi } from '@/lib/api';
 import type { DashboardStats, Activity } from '@/types/marketplace';
+import { DashboardSkeleton } from '@/components/vendor/DashboardSkeleton';
 
 export default function VendorDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -92,14 +93,7 @@ export default function VendorDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

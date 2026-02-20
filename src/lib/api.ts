@@ -630,9 +630,9 @@ export const vendorApi = {
     );
   },
 
-  getProduct: async (token: string, shopSlug: string, productId: number) => {
+  getProduct: async (token: string, shopSlug: string, productSlug: string) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -654,11 +654,11 @@ export const vendorApi = {
   updateProduct: async (
     token: string,
     shopSlug: string,
-    productId: number,
+    productSlug: string,
     data: Partial<ProductFormData>
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -667,8 +667,8 @@ export const vendorApi = {
     );
   },
 
-  deleteProduct: async (token: string, shopSlug: string, productId: number) => {
-    return vendorApiRequest(`/vendor/my-shop/${shopSlug}/products/${productId}`, {
+  deleteProduct: async (token: string, shopSlug: string, productSlug: string) => {
+    return vendorApiRequest(`/vendor/my-shop/${shopSlug}/products/${productSlug}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -677,10 +677,10 @@ export const vendorApi = {
   toggleProductStatus: async (
     token: string,
     shopSlug: string,
-    productId: number
+    productSlug: string
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/toggle-status`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/toggle-status`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -691,11 +691,11 @@ export const vendorApi = {
   updateStock: async (
     token: string,
     shopSlug: string,
-    productId: number,
+    productSlug: string,
     stock_quantity: number
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/stock`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/stock`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -707,12 +707,12 @@ export const vendorApi = {
   applyDiscount: async (
     token: string,
     shopSlug: string,
-    productId: number,
+    productSlug: string,
     discount_type: 'percent' | 'amount',
     discount_value: number
   ) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/apply-discount`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/apply-discount`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -721,9 +721,9 @@ export const vendorApi = {
     );
   },
 
-  removeDiscount: async (token: string, shopSlug: string, productId: number) => {
+  removeDiscount: async (token: string, shopSlug: string, productSlug: string) => {
     return vendorApiRequest<Product>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/remove-discount`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/remove-discount`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -735,14 +735,14 @@ export const vendorApi = {
   uploadMainImage: async (
     token: string,
     shopSlug: string,
-    productId: number,
+    productSlug: string,
     file: File
   ) => {
     const formData = new FormData();
     formData.append('image', file);
 
     return vendorApiRequest<MediaResource>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/images/main`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/images/main`,
       {
         method: 'POST',
         headers: { 
@@ -757,14 +757,14 @@ export const vendorApi = {
   uploadSecondaryImage: async (
     token: string,
     shopSlug: string,
-    productId: number,
+    productSlug: string,
     file: File
   ) => {
     const formData = new FormData();
     formData.append('image', file);
 
     return vendorApiRequest<MediaResource>(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/images/secondary`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/images/secondary`,
       {
         method: 'POST',
         headers: { 
@@ -776,9 +776,9 @@ export const vendorApi = {
     );
   },
 
-  deleteMainImage: async (token: string, shopSlug: string, productId: number) => {
+  deleteMainImage: async (token: string, shopSlug: string, productSlug: string) => {
     return vendorApiRequest(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/images/main`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/images/main`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -789,10 +789,10 @@ export const vendorApi = {
   deleteSecondaryImage: async (
     token: string,
     shopSlug: string,
-    productId: number
+    productSlug: string
   ) => {
     return vendorApiRequest(
-      `/vendor/my-shop/${shopSlug}/products/${productId}/images/secondary`,
+      `/vendor/my-shop/${shopSlug}/products/${productSlug}/images/secondary`,
       {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -801,8 +801,8 @@ export const vendorApi = {
   },
 
   // Product Analytics
-  getProductStats: async (token: string, productId: number) => {
-    return vendorApiRequest<ProductStats>(`/vendor/products/${productId}/stats`, {
+  getProductStats: async (token: string, productSlug: string) => {
+    return vendorApiRequest<ProductStats>(`/vendor/products/${productSlug}/stats`, {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
