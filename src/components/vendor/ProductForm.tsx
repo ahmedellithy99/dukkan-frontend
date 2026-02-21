@@ -27,14 +27,14 @@ import { cn } from '@/lib/utils';
 
 interface ProductFormProps {
   initialData?: Product;
-  shopId: number;
+  shopSlug?: string;
   onSubmit: (data: ProductFormData) => Promise<void>;
   onCancel: () => void;
 }
 
 export function ProductForm({
   initialData,
-  shopId,
+  shopSlug,
   onSubmit,
   onCancel,
 }: ProductFormProps) {
@@ -48,7 +48,7 @@ export function ProductForm({
     is_active: initialData?.is_active ?? true,
     attribute_values: initialData?.attribute_values?.map((av) => av.id) || [],
     discount_type: initialData?.discount_type,
-    discount_value: initialData?.discount_value,
+    discount_value: initialData?.discount_value || undefined,
   });
 
   // Loading states
@@ -176,7 +176,23 @@ export function ProductForm({
     setLoading(true);
 
     try {
-      await onSubmit(formData);
+      // Clean up the form data before submission
+      const submitData: ProductFormData = {
+        ...formData,
+      };
+
+      // Only include attribute_values if there are selected values
+      if (!formData.attribute_values || formData.attribute_values.length === 0) {
+        delete submitData.attribute_values;
+      }
+
+      // Only include discount fields if discount type is set
+      if (!formData.discount_type) {
+        delete submitData.discount_type;
+        delete submitData.discount_value;
+      }
+
+      await onSubmit(submitData);
     } catch (error) {
       setApiError(
         error instanceof Error ? error.message : 'Failed to save product'
@@ -359,8 +375,11 @@ export function ProductForm({
               type="number"
               step="0.01"
               min="0"
-              value={formData.price}
-              onChange={(e) => handleChange('price', parseFloat(e.target.value))}
+              value={formData.price || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                handleChange('price', isNaN(value) ? 0 : value);
+              }}
               placeholder="0.00"
               className={cn(errors.price && 'border-red-500')}
             />
@@ -378,10 +397,11 @@ export function ProductForm({
               id="stock_quantity"
               type="number"
               min="0"
-              value={formData.stock_quantity}
-              onChange={(e) =>
-                handleChange('stock_quantity', parseInt(e.target.value))
-              }
+              value={formData.stock_quantity || ''}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                handleChange('stock_quantity', isNaN(value) ? 0 : value);
+              }}
               placeholder="0"
               className={cn(errors.stock_quantity && 'border-red-500')}
             />
@@ -396,7 +416,12 @@ export function ProductForm({
 
       {/* Attributes */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Attributes</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Product Attributes</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Select attributes that describe your product (e.g., color, size, material)
+          </p>
+        </div>
 
         {loadingAttributes ? (
           <div className="flex items-center justify-center py-8">
@@ -406,12 +431,14 @@ export function ProductForm({
             </span>
           </div>
         ) : attributes.length === 0 ? (
-          <p className="text-sm text-gray-500">No attributes available</p>
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center">
+            <p className="text-sm text-gray-500">No attributes available</p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {attributes.map((attribute) => (
-              <div key={attribute.id} className="space-y-2">
-                <Label>{attribute.name}</Label>
+              <div key={attribute.id} className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <Label className="text-base font-semibold">{attribute.name}</Label>
                 <div className="flex flex-wrap gap-2">
                   {attribute.attribute_values?.map((value) => (
                     <button
@@ -419,10 +446,10 @@ export function ProductForm({
                       type="button"
                       onClick={() => toggleAttributeValue(value.id)}
                       className={cn(
-                        'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                        'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border-2',
                         formData.attribute_values?.includes(value.id)
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105'
+                          : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-primary hover:bg-primary/5 hover:scale-105'
                       )}
                     >
                       {value.value}
@@ -479,9 +506,10 @@ export function ProductForm({
                 min="0"
                 max={formData.discount_type === 'percent' ? 100 : undefined}
                 value={formData.discount_value || ''}
-                onChange={(e) =>
-                  handleChange('discount_value', parseFloat(e.target.value))
-                }
+                onChange={(e) => {
+                  const value = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                  handleChange('discount_value', value === undefined || isNaN(value) ? undefined : value);
+                }}
                 placeholder="0"
                 className={cn(errors.discount_value && 'border-red-500')}
               />
